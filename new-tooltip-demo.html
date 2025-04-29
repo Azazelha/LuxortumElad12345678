@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxortum - Демонстрація Контекстних Підказок</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/tooltip.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #f0f0f0;
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            border-bottom: 4px solid #4a00e0;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(74, 0, 224, 0.5);
+        }
+        
+        p {
+            font-size: 1.1em;
+            max-width: 800px;
+            margin: 0 auto 20px;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            background: linear-gradient(90deg, #4a00e0, #8e2de2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(142, 45, 226, 0.4);
+            margin-bottom: 20px;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(142, 45, 226, 0.6);
+        }
+        
+        .symbols-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 50px;
+        }
+        
+        .symbol {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            background: rgba(26, 26, 46, 0.8);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .symbol:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(142, 45, 226, 0.4);
+        }
+        
+        .symbol svg {
+            width: 120px;
+            height: 120px;
+            transition: all 0.5s ease;
+        }
+        
+        .symbol:hover svg {
+            transform: scale(1.1);
+        }
+        
+        .character-selector {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(26, 26, 46, 0.6);
+            border-radius: 10px;
+        }
+        
+        .character-btn {
+            background: transparent;
+            border: 2px solid;
+            padding: 8px 16px;
+            margin: 0 10px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+        
+        .guide-btn {
+            border-color: #4cc9f0;
+            color: #4cc9f0;
+        }
+        
+        .guide-btn:hover, .guide-btn.active {
+            background-color: #4cc9f0;
+            color: #121212;
+        }
+        
+        .prophet-btn {
+            border-color: #f72585;
+            color: #f72585;
+        }
+        
+        .prophet-btn:hover, .prophet-btn.active {
+            background-color: #f72585;
+            color: #121212;
+        }
+        
+        .lover-btn {
+            border-color: #ff9e00;
+            color: #ff9e00;
+        }
+        
+        .lover-btn:hover, .lover-btn.active {
+            background-color: #ff9e00;
+            color: #121212;
+        }
+        
+        .creator-btn {
+            border-color: #4361ee;
+            color: #4361ee;
+        }
+        
+        .creator-btn:hover, .creator-btn.active {
+            background-color: #4361ee;
+            color: #121212;
+        }
+        
+        .destroyer-btn {
+            border-color: #b5179e;
+            color: #b5179e;
+        }
+        
+        .destroyer-btn:hover, .destroyer-btn.active {
+            background-color: #b5179e;
+            color: #121212;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 60px;
+            color: #888;
+            border-top: 1px solid #333;
+        }
+        
+        /* Кабалістичні символи - SVG стилі */
+        .tree-of-life path {
+            stroke: #4a00e0;
+            stroke-width: 2;
+            fill: none;
+        }
+        
+        .tree-of-life circle {
+            fill: #8e2de2;
+        }
+        
+        .wisdom-circle path {
+            stroke: #f72585;
+            stroke-width: 2;
+            fill: none;
+        }
+        
+        .wisdom-circle circle {
+            fill: #f72585;
+        }
+        
+        .sacred-flame path {
+            fill: #ff9e00;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Контекстні Підказки</h1>
+        <p>Демонстрація системи підказок з різними типами персонажів</p>
+    </header>
+    
+    <div class="container">
+        <a href="/" class="back-btn">&larr; Повернутися на головну</a>
+        
+        <div class="character-selector">
+            <h2>Оберіть персонажа:</h2>
+            <div class="character-buttons">
+                <button class="character-btn guide-btn active" data-character="guide">Провідник</button>
+                <button class="character-btn prophet-btn" data-character="prophet">Пророк</button>
+                <button class="character-btn lover-btn" data-character="lover">Закоханий</button>
+                <button class="character-btn creator-btn" data-character="creator">Творець</button>
+                <button class="character-btn destroyer-btn" data-character="destroyer">Руйнівник</button>
+            </div>
+        </div>
+        
+        <div class="symbols-container">
+            <div class="symbol" id="tree_of_life">
+                <svg class="tree-of-life" viewBox="0 0 100 100">
+                    <!-- Дерево Життя - спрощена версія -->
+                    <circle cx="50" cy="10" r="5" />
+                    <circle cx="30" cy="25" r="5" />
+                    <circle cx="70" cy="25" r="5" />
+                    <circle cx="50" cy="40" r="5" />
+                    <circle cx="20" cy="55" r="5" />
+                    <circle cx="80" cy="55" r="5" />
+                    <circle cx="35" cy="70" r="5" />
+                    <circle cx="65" cy="70" r="5" />
+                    <circle cx="50" cy="85" r="5" />
+                    <circle cx="50" cy="55" r="5" />
+                    
+                    <path d="M50,10 L30,25 L50,40 L70,25 Z" />
+                    <path d="M50,40 L20,55 L35,70 L50,55 L65,70 L80,55 Z" />
+                    <path d="M35,70 L50,85 L65,70" />
+                    <path d="M50,10 L50,85" />
+                    <path d="M30,25 L80,55" />
+                    <path d="M70,25 L20,55" />
+                    <path d="M20,55 L65,70" />
+                    <path d="M80,55 L35,70" />
+                </svg>
+            </div>
+            
+            <div class="symbol" id="wisdom_circle">
+                <svg class="wisdom-circle" viewBox="0 0 100 100">
+                    <!-- Коло Мудрості -->
+                    <circle cx="50" cy="50" r="40" />
+                    <circle cx="50" cy="50" r="5" />
+                    <path d="M50,10 L50,90" />
+                    <path d="M10,50 L90,50" />
+                    <path d="M22,22 L78,78" />
+                    <path d="M22,78 L78,22" />
+                    <circle cx="50" cy="10" r="3" />
+                    <circle cx="50" cy="90" r="3" />
+                    <circle cx="10" cy="50" r="3" />
+                    <circle cx="90" cy="50" r="3" />
+                    <circle cx="22" cy="22" r="3" />
+                    <circle cx="78" cy="78" r="3" />
+                    <circle cx="22" cy="78" r="3" />
+                    <circle cx="78" cy="22" r="3" />
+                </svg>
+            </div>
+            
+            <div class="symbol" id="sacred_flame">
+                <svg class="sacred-flame" viewBox="0 0 100 100">
+                    <!-- Священне Полум'я -->
+                    <path d="M50,10 C60,25 75,30 70,45 C65,60 70,75 60,80 C50,85 45,80 40,75 C35,70 35,55 30,45 C25,35 40,25 50,10 Z">
+                        <animate attributeName="d" 
+                                 dur="3s"
+                                 repeatCount="indefinite"
+                                 values="M50,10 C60,25 75,30 70,45 C65,60 70,75 60,80 C50,85 45,80 40,75 C35,70 35,55 30,45 C25,35 40,25 50,10 Z;
+                                         M50,10 C63,25 70,30 68,45 C66,60 73,75 63,83 C48,88 42,80 38,75 C32,70 32,55 28,45 C22,35 35,25 50,10 Z;
+                                         M50,10 C60,25 75,30 70,45 C65,60 70,75 60,80 C50,85 45,80 40,75 C35,70 35,55 30,45 C25,35 40,25 50,10 Z" />
+                    </path>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2025 Luxortum. Всі права захищені.</p>
+    </footer>
+    
+    <script src="/static/js/tooltip.js"></script>
+    <script>
+        // Ініціалізуємо обробники подій
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentCharacter = 'guide';
+            
+            // Функція для ініціалізації підказок
+            function initTooltips() {
+                const symbols = document.querySelectorAll('.symbol');
+                
+                symbols.forEach(symbol => {
+                    symbol.addEventListener('mouseover', function() {
+                        fetchTooltip(this.id, currentCharacter);
+                    });
+                    
+                    symbol.addEventListener('mouseout', function() {
+                        hideTooltip();
+                    });
+                });
+            }
+            
+            // Функція для отримання даних підказки
+            function fetchTooltip(elementId, characterType) {
+                fetch(`/api/tooltips?element_id=${elementId}&character_type=${characterType}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length > 0) {
+                            showTooltip(data[0], event);
+                        }
+                    })
+                    .catch(error => console.error('Error fetching tooltip:', error));
+            }
+            
+            // Функція для відображення підказки
+            function showTooltip(tooltipData, event) {
+                const tooltip = document.createElement('div');
+                tooltip.className = `tooltip ${tooltipData.character_type}-tooltip`;
+                tooltip.innerHTML = `
+                    <div class="tooltip-content">
+                        <div class="tooltip-icon ${tooltipData.character_type}-icon"></div>
+                        <p>${tooltipData.text}</p>
+                    </div>
+                `;
+                
+                // Додаємо клас анімації в залежності від типу персонажа
+                if (tooltipData.character_type === 'guide') {
+                    tooltip.classList.add('guide-animation');
+                } else if (tooltipData.character_type === 'prophet') {
+                    tooltip.classList.add('prophet-animation');
+                } else if (tooltipData.character_type === 'lover') {
+                    tooltip.classList.add('lover-animation');
+                } else if (tooltipData.character_type === 'creator') {
+                    tooltip.classList.add('creator-animation');
+                } else if (tooltipData.character_type === 'destroyer') {
+                    tooltip.classList.add('destroyer-animation');
+                }
+                
+                document.body.appendChild(tooltip);
+                
+                // Позиціонуємо підказку біля курсора
+                const rect = event.target.getBoundingClientRect();
+                tooltip.style.left = `${rect.right + 20}px`;
+                tooltip.style.top = `${rect.top + window.scrollY}px`;
+                
+                // Перевіряємо, чи не виходить підказка за межі екрану
+                const tooltipRect = tooltip.getBoundingClientRect();
+                if (tooltipRect.right > window.innerWidth) {
+                    tooltip.style.left = `${rect.left - tooltipRect.width - 20}px`;
+                }
+            }
+            
+            // Функція для приховування підказки
+            function hideTooltip() {
+                const tooltips = document.querySelectorAll('.tooltip');
+                tooltips.forEach(tooltip => {
+                    tooltip.remove();
+                });
+            }
+            
+            // Функція для зміни активного персонажа
+            function changeCharacter() {
+                const buttons = document.querySelectorAll('.character-btn');
+                
+                buttons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        buttons.forEach(btn => btn.classList.remove('active'));
+                        this.classList.add('active');
+                        currentCharacter = this.getAttribute('data-character');
+                    });
+                });
+            }
+            
+            // Ініціалізація
+            initTooltips();
+            changeCharacter();
+        });
+    </script>
+</body>
+</html>

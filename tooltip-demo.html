@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Демо підказок Luxortum</title>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #e1e1e1;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #1e1e1e;
+            padding: 20px 0;
+            text-align: center;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            color: #bb86fc;
+        }
+        
+        .subtitle {
+            color: #03dac6;
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+        
+        .demo-section {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        h2 {
+            color: #bb86fc;
+            margin-top: 0;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .tooltip-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .tooltip-symbol {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            background-color: #2d2d2d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .tooltip-symbol:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(187, 134, 252, 0.4);
+        }
+        
+        .tooltip-symbol img {
+            max-width: 100px;
+            max-height: 100px;
+        }
+        
+        .tooltip-symbol svg {
+            width: 100px;
+            height: 100px;
+            fill: #bb86fc;
+        }
+        
+        .tooltip-box {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 250px;
+            background-color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 100;
+            margin-bottom: 10px;
+        }
+        
+        .tooltip-symbol:hover .tooltip-box {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-5px);
+        }
+        
+        .tooltip-box::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -10px;
+            border-width: 10px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+        
+        .character-type-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .character-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            background-color: #2d2d2d;
+            color: #e1e1e1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        
+        .character-btn:hover {
+            background-color: #3d3d3d;
+        }
+        
+        .character-btn.active {
+            background-color: #bb86fc;
+            color: #000;
+        }
+        
+        .guide-highlight {
+            box-shadow: 0 0 20px rgba(3, 218, 198, 0.7);
+            border: 2px solid #03dac6;
+        }
+        
+        .prophet-highlight {
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.7);
+            border: 2px solid gold;
+        }
+        
+        .lover-highlight {
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.7);
+            border: 2px solid hotpink;
+        }
+        
+        .creator-highlight {
+            box-shadow: 0 0 20px rgba(124, 77, 255, 0.7);
+            border: 2px solid #7c4dff;
+        }
+        
+        .destroyer-highlight {
+            box-shadow: 0 0 20px rgba(207, 42, 39, 0.7);
+            border: 2px solid #cf2a27;
+        }
+        
+        @keyframes pulse-guide {
+            0% { box-shadow: 0 0 5px 0px rgba(3, 218, 198, 0.7); }
+            50% { box-shadow: 0 0 20px 5px rgba(3, 218, 198, 0.7); }
+            100% { box-shadow: 0 0 5px 0px rgba(3, 218, 198, 0.7); }
+        }
+        
+        @keyframes glow-prophet {
+            0% { box-shadow: 0 0 5px 0px rgba(255, 215, 0, 0.7); }
+            50% { box-shadow: 0 0 25px 8px rgba(255, 215, 0, 0.7); }
+            100% { box-shadow: 0 0 5px 0px rgba(255, 215, 0, 0.7); }
+        }
+        
+        @keyframes heartbeat-lover {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.1); }
+            50% { transform: scale(1); }
+            75% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes rotate-creator {
+            0% { box-shadow: 0 0 15px 5px rgba(124, 77, 255, 0.7); transform: rotate(0deg); }
+            100% { box-shadow: 0 0 15px 5px rgba(124, 77, 255, 0.7); transform: rotate(360deg); }
+        }
+        
+        @keyframes flicker-destroyer {
+            0% { opacity: 1; box-shadow: 0 0 10px 0px rgba(207, 42, 39, 0.7); }
+            25% { opacity: 0.8; box-shadow: 0 0 5px 0px rgba(207, 42, 39, 0.3); }
+            50% { opacity: 1; box-shadow: 0 0 15px 0px rgba(207, 42, 39, 0.8); }
+            75% { opacity: 0.9; box-shadow: 0 0 8px 0px rgba(207, 42, 39, 0.5); }
+            100% { opacity: 1; box-shadow: 0 0 10px 0px rgba(207, 42, 39, 0.7); }
+        }
+        
+        .guide-animation {
+            animation: pulse-guide 3s infinite ease-in-out;
+        }
+        
+        .prophet-animation {
+            animation: glow-prophet 4s infinite ease-in-out;
+        }
+        
+        .lover-animation {
+            animation: heartbeat-lover 1.5s infinite ease-in-out;
+        }
+        
+        .creator-animation {
+            animation: rotate-creator 8s infinite linear;
+        }
+        
+        .destroyer-animation {
+            animation: flicker-destroyer 2s infinite ease-in-out;
+        }
+        
+        .tooltip-text {
+            margin: 0;
+            font-size: 0.95rem;
+        }
+        
+        .character-title {
+            margin: 0 0 10px 0;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        
+        .guide-title { color: #03dac6; }
+        .prophet-title { color: gold; }
+        .lover-title { color: hotpink; }
+        .creator-title { color: #7c4dff; }
+        .destroyer-title { color: #cf2a27; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Luxortum</h1>
+        <div class="subtitle">Система контекстних підказок</div>
+    </header>
+    
+    <div class="container">
+        <div class="demo-section">
+            <h2>Демонстрація типів персонажів</h2>
+            
+            <div class="character-type-selector">
+                <button class="character-btn active" data-type="guide">Гід</button>
+                <button class="character-btn" data-type="prophet">Пророк</button>
+                <button class="character-btn" data-type="lover">Коханець</button>
+                <button class="character-btn" data-type="creator">Творець</button>
+                <button class="character-btn" data-type="destroyer">Руйнівник</button>
+            </div>
+            
+            <div class="tooltip-container">
+                <div class="tooltip-symbol" id="tree_of_life">
+                    <!-- Tree of Life Symbol SVG -->
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="10" r="8" />
+                        <circle cx="30" cy="25" r="8" />
+                        <circle cx="70" cy="25" r="8" />
+                        <circle cx="50" cy="40" r="8" />
+                        <circle cx="20" cy="55" r="8" />
+                        <circle cx="80" cy="55" r="8" />
+                        <circle cx="35" cy="70" r="8" />
+                        <circle cx="65" cy="70" r="8" />
+                        <circle cx="50" cy="85" r="8" />
+                        <line x1="50" y1="18" x2="50" y2="32" stroke="#bb86fc" stroke-width="2" />
+                        <line x1="50" y1="48" x2="50" y2="77" stroke="#bb86fc" stroke-width="2" />
+                        <line x1="35" y1="78" x2="44" y2="85" stroke="#bb86fc" stroke-width="2" />
+                        <line x1="65" y1="78" x2="56" y2="85" stroke="#bb86fc" stroke-width="2" />
+                        <line x1="38" y1="25" x2="42" y2="40" stroke="#bb86fc" stroke-width="2" />
+                        <line x1="62" y1="25" x2="58" y2="40" stroke="#bb86fc" stroke-width="2" />
+                        <line x1="28" y1="55" x2="42" y2="40" stroke="#bb86fc" stroke-width="2" />
+                        <line x1="72" y1="55" x2="58" y2="40" stroke="#bb86fc" stroke-width="2" />
+                        <line x1="28" y1="63" x2="35" y2="70" stroke="#bb86fc" stroke-width="2" />
+                        <line x1="72" y1="63" x2="65" y2="70" stroke="#bb86fc" stroke-width="2" />
+                    </svg>
+                    <div class="tooltip-box">
+                        <div class="character-title guide-title">Гід</div>
+                        <p class="tooltip-text">Дерево Життя є центральною концепцією кабалістичної традиції. Воно представляє структуру всесвіту та шлях до божественного.</p>
+                    </div>
+                </div>
+                
+                <div class="tooltip-symbol" id="wisdom_circle">
+                    <!-- Circle of Wisdom Symbol SVG -->
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#bb86fc" stroke-width="3" />
+                        <circle cx="50" cy="50" r="30" fill="none" stroke="#bb86fc" stroke-width="2" />
+                        <circle cx="50" cy="50" r="20" fill="none" stroke="#bb86fc" stroke-width="1.5" />
+                        <circle cx="50" cy="50" r="10" fill="none" stroke="#bb86fc" stroke-width="1" />
+                        <line x1="10" y1="50" x2="90" y2="50" stroke="#bb86fc" stroke-width="1" />
+                        <line x1="50" y1="10" x2="50" y2="90" stroke="#bb86fc" stroke-width="1" />
+                        <line x1="22" y1="22" x2="78" y2="78" stroke="#bb86fc" stroke-width="1" />
+                        <line x1="22" y1="78" x2="78" y2="22" stroke="#bb86fc" stroke-width="1" />
+                    </svg>
+                    <div class="tooltip-box">
+                        <div class="character-title guide-title">Гід</div>
+                        <p class="tooltip-text">Коло Мудрості символізує нескінченну природу божественного знання. Заглибся в себе і знайди свій шлях до просвітлення.</p>
+                    </div>
+                </div>
+                
+                <div class="tooltip-symbol" id="sacred_flame">
+                    <!-- Sacred Flame Symbol SVG -->
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M 50,90 C 20,80 20,40 30,25 C 35,15 40,10 50,10 C 60,10 65,15 70,25 C 80,40 80,80 50,90 Z" fill="none" stroke="#bb86fc" stroke-width="2" />
+                        <path d="M 50,80 C 30,70 30,40 40,30 C 42,25 45,20 50,20 C 55,20 58,25 60,30 C 70,40 70,70 50,80 Z" fill="none" stroke="#bb86fc" stroke-width="1.5" />
+                        <path d="M 50,60 C 45,55 45,45 47,40 C 48,38 49,35 50,35 C 51,35 52,38 53,40 C 55,45 55,55 50,60 Z" fill="none" stroke="#bb86fc" stroke-width="1" />
+                    </svg>
+                    <div class="tooltip-box">
+                        <div class="character-title guide-title">Гід</div>
+                        <p class="tooltip-text">Священне Полум'я — це символ пристрасті до знання й істини. Відчуй жар цього полум'я в своєму серці.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Зміна типу персонажа
+            const characterButtons = document.querySelectorAll('.character-btn');
+            const tooltipSymbols = document.querySelectorAll('.tooltip-symbol');
+            
+            function fetchTooltips(characterType) {
+                fetch(`/api/tooltips`)
+                    .then(response => response.json())
+                    .then(data => {
+                        tooltipSymbols.forEach(symbol => {
+                            const elementId = symbol.id;
+                            const tooltip = data.find(t => t.element_id === elementId && t.character_type === characterType);
+                            
+                            if (tooltip) {
+                                const tooltipBox = symbol.querySelector('.tooltip-box');
+                                const titleDiv = tooltipBox.querySelector('.character-title');
+                                const textP = tooltipBox.querySelector('.tooltip-text');
+                                
+                                // Оновлюємо текст підказки
+                                textP.textContent = tooltip.text;
+                                
+                                // Оновлюємо заголовок і клас для нього
+                                titleDiv.className = `character-title ${characterType}-title`;
+                                
+                                // Визначаємо назву типу українською
+                                const characterNames = {
+                                    'guide': 'Гід',
+                                    'prophet': 'Пророк',
+                                    'lover': 'Коханець',
+                                    'creator': 'Творець',
+                                    'destroyer': 'Руйнівник'
+                                };
+                                
+                                titleDiv.textContent = characterNames[characterType] || characterType;
+                            }
+                        });
+                    })
+                    .catch(error => console.error('Помилка при отриманні підказок:', error));
+            }
+            
+            characterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const characterType = this.dataset.type;
+                    
+                    // Видаляємо активний клас з усіх кнопок
+                    characterButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Додаємо активний клас вибраній кнопці
+                    this.classList.add('active');
+                    
+                    // Видаляємо всі класи підсвічування і анімацій
+                    tooltipSymbols.forEach(symbol => {
+                        symbol.classList.remove(
+                            'guide-highlight', 'prophet-highlight', 'lover-highlight', 
+                            'creator-highlight', 'destroyer-highlight',
+                            'guide-animation', 'prophet-animation', 'lover-animation',
+                            'creator-animation', 'destroyer-animation'
+                        );
+                        
+                        // Додаємо нове підсвічування і анімацію
+                        symbol.classList.add(`${characterType}-highlight`);
+                        symbol.classList.add(`${characterType}-animation`);
+                    });
+                    
+                    // Отримуємо підказки для вибраного типу персонажа
+                    fetchTooltips(characterType);
+                });
+            });
+            
+            // Ініціалізуємо гіда за замовчуванням
+            fetchTooltips('guide');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Демо індикатора настрою світу Luxortum</title>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #e1e1e1;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: #1e1e1e;
+            padding: 20px 0;
+            text-align: center;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            color: #bb86fc;
+        }
+        
+        .subtitle {
+            color: #03dac6;
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+        
+        .demo-section {
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        h2 {
+            color: #bb86fc;
+            margin-top: 0;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .mood-container {
+            background-color: #2d2d2d;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .mood-indicator {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .mood-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .mood-subtitle {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+        
+        .mood-intensity {
+            margin: 25px auto;
+            width: 80%;
+            max-width: 500px;
+        }
+        
+        .intensity-bar {
+            height: 30px;
+            background: linear-gradient(to right, #3a86ff, #8338ec, #ff006e, #fb5607, #ffbe0b);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .intensity-fill {
+            height: 100%;
+            width: 60%; /* Буде змінюватись через JavaScript */
+            background-color: rgba(0, 0, 0, 0.7);
+            position: absolute;
+            top: 0;
+            right: 0;
+            border-radius: 0 15px 15px 0;
+            transition: width 1s ease-in-out;
+        }
+        
+        .intensity-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        .mood-effects {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .effect-item {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .effect-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .positive-effect {
+            color: #00e676;
+        }
+        
+        .negative-effect {
+            color: #ff5252;
+        }
+        
+        .neutral-effect {
+            color: #e1e1e1;
+        }
+        
+        .events-container {
+            margin-top: 40px;
+        }
+        
+        .event-list {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .event-item {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .event-name {
+            font-weight: bold;
+        }
+        
+        .event-impact {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .impact-positive {
+            background-color: rgba(0, 230, 118, 0.2);
+            color: #00e676;
+        }
+        
+        .impact-negative {
+            background-color: rgba(255, 82, 82, 0.2);
+            color: #ff5252;
+        }
+        
+        .impact-neutral {
+            background-color: rgba(225, 225, 225, 0.2);
+            color: #e1e1e1;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 40px;
+        }
+        
+        .mood-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            background-color: #3d3d3d;
+            color: #e1e1e1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .mood-btn:hover {
+            background-color: #4d4d4d;
+            transform: translateY(-2px);
+        }
+        
+        /* Різні кольори для різних настроїв */
+        .ecstatic { color: #ffbe0b; }
+        .joyful { color: #fb8500; }
+        .peaceful { color: #3a86ff; }
+        .neutral { color: #e1e1e1; }
+        .anxious { color: #8338ec; }
+        .melancholic { color: #8ecae6; }
+        .sad { color: #219ebc; }
+        .angry { color: #ff006e; }
+        .chaotic { color: #ff5252; }
+        
+        /* Анімації для індикатора настрою */
+        @keyframes pulse-ecstatic {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes shimmer-joyful {
+            0% { text-shadow: 0 0 5px rgba(251, 133, 0, 0.5); }
+            50% { text-shadow: 0 0 20px rgba(251, 133, 0, 0.8); }
+            100% { text-shadow: 0 0 5px rgba(251, 133, 0, 0.5); }
+        }
+        
+        @keyframes wave-peaceful {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
+        }
+        
+        @keyframes fade-melancholic {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        
+        @keyframes shake-angry {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            50% { transform: translateX(0); }
+            75% { transform: translateX(3px); }
+            100% { transform: translateX(0); }
+        }
+        
+        @keyframes glitch-chaotic {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+        
+        .animate-ecstatic { animation: pulse-ecstatic 1.5s infinite ease-in-out; }
+        .animate-joyful { animation: shimmer-joyful 2s infinite ease-in-out; }
+        .animate-peaceful { animation: wave-peaceful 3s infinite ease-in-out; }
+        .animate-melancholic { animation: fade-melancholic 4s infinite ease-in-out; }
+        .animate-angry { animation: shake-angry 0.5s infinite ease-in-out; }
+        .animate-chaotic { animation: glitch-chaotic 0.3s infinite ease-in-out; }
+        
+        /* Стилі для скроллбара */
+        .event-list::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .event-list::-webkit-scrollbar-track {
+            background: #1e1e1e;
+            border-radius: 10px;
+        }
+        
+        .event-list::-webkit-scrollbar-thumb {
+            background: #3d3d3d;
+            border-radius: 10px;
+        }
+        
+        .event-list::-webkit-scrollbar-thumb:hover {
+            background: #4d4d4d;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Luxortum</h1>
+        <div class="subtitle">Індикатор настрою світу</div>
+    </header>
+    
+    <div class="container">
+        <div class="demo-section">
+            <h2>Моніторинг настрою віртуального світу</h2>
+            
+            <div class="mood-container">
+                <div class="mood-indicator">
+                    <h3 class="mood-title peaceful" id="mood-title">Мирний</h3>
+                    <div class="mood-subtitle" id="mood-subtitle">Світ перебуває в стані спокою і гармонії</div>
+                    
+                    <div class="mood-intensity">
+                        <div class="intensity-bar">
+                            <div class="intensity-fill" id="intensity-fill" style="width: 40%"></div>
+                        </div>
+                        <div class="intensity-labels">
+                            <span>Низька інтенсивність</span>
+                            <span>Висока інтенсивність</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mood-effects">
+                    <div class="effect-item">
+                        <div>Зростання</div>
+                        <div class="effect-value positive-effect" id="growth-effect">+0.2</div>
+                    </div>
+                    
+                    <div class="effect-item">
+                        <div>Творчість</div>
+                        <div class="effect-value positive-effect" id="creativity-effect">+0.1</div>
+                    </div>
+                    
+                    <div class="effect-item">
+                        <div>Гармонія</div>
+                        <div class="effect-value positive-effect" id="harmony-effect">+0.5</div>
+                    </div>
+                    
+                    <div class="effect-item">
+                        <div>Хаос</div>
+                        <div class="effect-value negative-effect" id="chaos-effect">-0.4</div>
+                    </div>
+                </div>
+                
+                <div class="events-container">
+                    <h3>Останні події</h3>
+                    <div class="event-list" id="event-list">
+                        <!-- Тут будуть події, додані через JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="mood-btn" data-mood="peaceful">Мирний</button>
+                    <button class="mood-btn" data-mood="joyful">Радісний</button>
+                    <button class="mood-btn" data-mood="ecstatic">Екстатичний</button>
+                    <button class="mood-btn" data-mood="neutral">Нейтральний</button>
+                    <button class="mood-btn" data-mood="melancholic">Меланхолійний</button>
+                    <button class="mood-btn" data-mood="anxious">Тривожний</button>
+                    <button class="mood-btn" data-mood="sad">Сумний</button>
+                    <button class="mood-btn" data-mood="angry">Сердитий</button>
+                    <button class="mood-btn" data-mood="chaotic">Хаотичний</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Отримуємо елементи DOM
+            const moodTitle = document.getElementById('mood-title');
+            const moodSubtitle = document.getElementById('mood-subtitle');
+            const intensityFill = document.getElementById('intensity-fill');
+            const growthEffect = document.getElementById('growth-effect');
+            const creativityEffect = document.getElementById('creativity-effect');
+            const harmonyEffect = document.getElementById('harmony-effect');
+            const chaosEffect = document.getElementById('chaos-effect');
+            const eventList = document.getElementById('event-list');
+            const moodButtons = document.querySelectorAll('.mood-btn');
+            
+            // Функція для форматування значення ефекту
+            function formatEffectValue(value) {
+                if (value > 0) return `+${value.toFixed(1)}`;
+                if (value < 0) return value.toFixed(1);
+                return '0.0';
+            }
+            
+            // Функція для встановлення класу ефекту
+            function getEffectClass(value) {
+                if (value > 0) return 'positive-effect';
+                if (value < 0) return 'negative-effect';
+                return 'neutral-effect';
+            }
+            
+            // Функція для отримання опису настрою
+            function getMoodDescription(mood) {
+                const descriptions = {
+                    'ecstatic': 'Світ переповнений енергією і радісним збудженням',
+                    'joyful': 'Атмосфера наповнена радістю і оптимізмом',
+                    'peaceful': 'Світ перебуває в стані спокою і гармонії',
+                    'neutral': 'Збалансований стан без сильних емоційних відхилень',
+                    'anxious': 'У повітрі відчувається напруга і неспокій',
+                    'melancholic': 'Меланхолія і задумливість наповнюють простір',
+                    'sad': 'Сум і печаль торкнулися всього живого',
+                    'angry': 'Гнів і роздратування поширюються світом',
+                    'chaotic': 'Хаос і непередбачуваність панують у всьому'
+                };
+                
+                return descriptions[mood] || descriptions['neutral'];
+            }
+            
+            // Функція для відображення даних настрою
+            function displayMoodData(data) {
+                // Оновлюємо заголовок і підзаголовок
+                moodTitle.textContent = data.mood.charAt(0).toUpperCase() + data.mood.slice(1);
+                moodTitle.className = `mood-title ${data.mood.toLowerCase()}`;
+                
+                // Додаємо анімацію відповідно до настрою
+                const animationClass = `animate-${data.mood.toLowerCase()}`;
+                moodTitle.classList.remove('animate-ecstatic', 'animate-joyful', 'animate-peaceful', 'animate-melancholic', 'animate-angry', 'animate-chaotic');
+                
+                if (['ecstatic', 'joyful', 'peaceful', 'melancholic', 'angry', 'chaotic'].includes(data.mood.toLowerCase())) {
+                    moodTitle.classList.add(animationClass);
+                }
+                
+                moodSubtitle.textContent = getMoodDescription(data.mood.toLowerCase());
+                
+                // Оновлюємо індикатор інтенсивності
+                intensityFill.style.width = `${100 - data.intensity * 100}%`;
+                
+                // Оновлюємо значення ефектів
+                const effects = data.effects || {};
+                
+                growthEffect.textContent = formatEffectValue(effects.growth || 0);
+                growthEffect.className = `effect-value ${getEffectClass(effects.growth || 0)}`;
+                
+                creativityEffect.textContent = formatEffectValue(effects.creativity || 0);
+                creativityEffect.className = `effect-value ${getEffectClass(effects.creativity || 0)}`;
+                
+                harmonyEffect.textContent = formatEffectValue(effects.harmony || 0);
+                harmonyEffect.className = `effect-value ${getEffectClass(effects.harmony || 0)}`;
+                
+                chaosEffect.textContent = formatEffectValue(effects.chaos || 0);
+                chaosEffect.className = `effect-value ${getEffectClass(effects.chaos || 0)}`;
+                
+                // Оновлюємо список подій
+                eventList.innerHTML = '';
+                if (data.events && data.events.length > 0) {
+                    data.events.forEach(event => {
+                        const eventItem = document.createElement('div');
+                        eventItem.className = 'event-item';
+                        
+                        const eventName = document.createElement('div');
+                        eventName.className = 'event-name';
+                        eventName.textContent = event.name;
+                        
+                        const eventImpact = document.createElement('div');
+                        let impactClass = 'impact-neutral';
+                        if (event.impact === 'positive') {
+                            impactClass = 'impact-positive';
+                        } else if (event.impact === 'negative') {
+                            impactClass = 'impact-negative';
+                        }
+                        eventImpact.className = `event-impact ${impactClass}`;
+                        eventImpact.textContent = event.impact.charAt(0).toUpperCase() + event.impact.slice(1);
+                        
+                        eventItem.appendChild(eventName);
+                        eventItem.appendChild(eventImpact);
+                        eventList.appendChild(eventItem);
+                    });
+                } else {
+                    const noEvents = document.createElement('div');
+                    noEvents.textContent = 'Немає нових подій';
+                    noEvents.style.opacity = '0.7';
+                    noEvents.style.textAlign = 'center';
+                    noEvents.style.padding = '20px';
+                    eventList.appendChild(noEvents);
+                }
+            }
+            
+            // Функція для отримання даних настрою світу з API
+            function fetchWorldMood() {
+                fetch('/api/world-mood')
+                    .then(response => response.json())
+                    .then(data => {
+                        displayMoodData(data);
+                    })
+                    .catch(error => console.error('Помилка при отриманні даних настрою світу:', error));
+            }
+            
+            // Обробник кліку на кнопки настрою
+            moodButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const mood = this.dataset.mood;
+                    
+                    // Генеруємо випадкову інтенсивність
+                    const intensity = Math.random() * 0.6 + 0.4; // від 0.4 до 1.0
+                    
+                    // Генеруємо подію
+                    const event = {
+                        name: `Зміна настрою на ${mood}`,
+                        impact: ['peaceful', 'joyful', 'ecstatic'].includes(mood) ? 'positive' : 
+                                ['angry', 'sad', 'chaotic'].includes(mood) ? 'negative' : 'neutral'
+                    };
+                    
+                    // Надсилаємо дані на сервер
+                    fetch('/api/world-mood', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            mood: mood,
+                            intensity: intensity,
+                            events: [event]
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            displayMoodData(data.data);
+                        }
+                    })
+                    .catch(error => console.error('Помилка при оновленні настрою світу:', error));
+                });
+            });
+            
+            // Отримуємо початкові дані
+            fetchWorldMood();
+            
+            // Оновлюємо дані кожні 30 секунд
+            setInterval(fetchWorldMood, 30000);
+        });
+    </script>
+</body>
+</html>

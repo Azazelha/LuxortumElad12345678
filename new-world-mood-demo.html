@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxortum - Демонстрація Настрою Світу</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/world-mood.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #f0f0f0;
+            line-height: 1.6;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            border-bottom: 4px solid #4a00e0;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(74, 0, 224, 0.5);
+        }
+        
+        p {
+            font-size: 1.1em;
+            max-width: 800px;
+            margin: 0 auto 20px;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            background: linear-gradient(90deg, #4a00e0, #8e2de2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(142, 45, 226, 0.4);
+            margin-bottom: 20px;
+        }
+        
+        .back-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(142, 45, 226, 0.6);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 60px;
+            color: #888;
+            border-top: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Індикатор Настрою Світу</h1>
+        <p>Демонстрація системи відстеження емоційного стану віртуального світу</p>
+    </header>
+    
+    <div class="container">
+        <a href="/" class="back-btn">&larr; Повернутися на головну</a>
+        
+        <div class="world-mood-container">
+            <div class="mood-header">
+                <h2 class="mood-title">Настрій Світу</h2>
+                <div class="mood-state">
+                    <div id="mood-emoji" class="mood-emoji">😌</div>
+                    <div id="mood-name" class="mood-name">Мирний</div>
+                </div>
+            </div>
+            
+            <div class="mood-intensity">
+                <div class="intensity-label">
+                    <span>Слабкий</span>
+                    <span>Сильний</span>
+                </div>
+                <div class="intensity-bar peaceful">
+                    <div id="intensity-fill" class="intensity-fill" style="width: 60%;"></div>
+                </div>
+            </div>
+            
+            <div class="effects-container">
+                <div id="effect-growth" class="effect-item">
+                    <div class="effect-name">Ріст</div>
+                    <div class="effect-value effect-positive">+0.2</div>
+                </div>
+                
+                <div id="effect-creativity" class="effect-item">
+                    <div class="effect-name">Творчість</div>
+                    <div class="effect-value effect-positive">+0.1</div>
+                </div>
+                
+                <div id="effect-harmony" class="effect-item">
+                    <div class="effect-name">Гармонія</div>
+                    <div class="effect-value effect-positive">+0.5</div>
+                </div>
+                
+                <div id="effect-chaos" class="effect-item">
+                    <div class="effect-name">Хаос</div>
+                    <div class="effect-value effect-negative">-0.4</div>
+                </div>
+            </div>
+            
+            <div class="events-container">
+                <h3 class="events-title">Останні події</h3>
+                <div id="event-list" class="event-list">
+                    <!-- Події будуть додані через JavaScript -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="mood-controls">
+            <h3 class="control-title">Контроль настрою (для демонстрації)</h3>
+            
+            <div class="control-section">
+                <h4>Змінити настрій</h4>
+                <div class="mood-buttons">
+                    <button class="mood-button" data-mood="ecstatic">Екстатичний</button>
+                    <button class="mood-button" data-mood="joyful">Радісний</button>
+                    <button class="mood-button" data-mood="peaceful">Мирний</button>
+                    <button class="mood-button" data-mood="neutral">Нейтральний</button>
+                    <button class="mood-button" data-mood="anxious">Тривожний</button>
+                    <button class="mood-button" data-mood="melancholic">Меланхолійний</button>
+                    <button class="mood-button" data-mood="sad">Сумний</button>
+                    <button class="mood-button" data-mood="angry">Гнівний</button>
+                    <button class="mood-button" data-mood="chaotic">Хаотичний</button>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <h4>Інтенсивність</h4>
+                <input type="range" id="intensity-control" class="intensity-control" min="0" max="1" step="0.1" value="0.6">
+            </div>
+            
+            <div class="control-section">
+                <h4>Додати подію</h4>
+                <div class="add-event-form">
+                    <input type="text" id="event-name" class="event-input" placeholder="Назва події">
+                    <select id="event-impact" class="impact-select">
+                        <option value="positive">Позитивна</option>
+                        <option value="neutral">Нейтральна</option>
+                        <option value="negative">Негативна</option>
+                    </select>
+                    <button id="add-event-btn" class="add-event-button">Додати подію</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2025 Luxortum. Всі права захищені.</p>
+    </footer>
+    
+    <script src="/static/js/world-mood.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Отримуємо початковий стан настрою світу
+            fetchWorldMood();
+            
+            // Обробники подій для елементів керування
+            
+            // Кнопки зміни настрою
+            const moodButtons = document.querySelectorAll('.mood-button');
+            moodButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const newMood = this.getAttribute('data-mood');
+                    const intensity = document.getElementById('intensity-control').value;
+                    
+                    updateWorldMood(newMood, parseFloat(intensity));
+                });
+            });
+            
+            // Повзунок інтенсивності
+            const intensityControl = document.getElementById('intensity-control');
+            intensityControl.addEventListener('change', function() {
+                const currentMood = document.getElementById('mood-name').textContent;
+                const moodCode = getMoodCodeFromName(currentMood);
+                
+                if (moodCode) {
+                    updateWorldMood(moodCode, parseFloat(this.value));
+                }
+            });
+            
+            // Кнопка додавання події
+            const addEventButton = document.getElementById('add-event-btn');
+            addEventButton.addEventListener('click', function() {
+                const eventName = document.getElementById('event-name').value.trim();
+                const eventImpact = document.getElementById('event-impact').value;
+                
+                if (eventName) {
+                    addWorldEvent(eventName, eventImpact);
+                    document.getElementById('event-name').value = '';
+                }
+            });
+            
+            // Функція для перетворення локалізованої назви настрою в код
+            function getMoodCodeFromName(localizedName) {
+                const moodMap = {
+                    'Екстатичний': 'ecstatic',
+                    'Радісний': 'joyful',
+                    'Мирний': 'peaceful',
+                    'Нейтральний': 'neutral',
+                    'Тривожний': 'anxious',
+                    'Меланхолійний': 'melancholic',
+                    'Сумний': 'sad',
+                    'Гнівний': 'angry',
+                    'Хаотичний': 'chaotic'
+                };
+                
+                return moodMap[localizedName] || 'neutral';
+            }
+            
+            // Функція для оновлення настрою світу
+            function updateWorldMood(mood, intensity) {
+                const data = {
+                    mood: mood,
+                    intensity: intensity
+                };
+                
+                fetch('/api/world-mood', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success' && result.data) {
+                        updateWorldMoodDisplay(result.data);
+                    }
+                })
+                .catch(error => console.error('Error updating world mood:', error));
+            }
+            
+            // Функція для додавання нової події
+            function addWorldEvent(eventName, impact) {
+                const data = {
+                    events: [
+                        {
+                            name: eventName,
+                            impact: impact
+                        }
+                    ]
+                };
+                
+                fetch('/api/world-mood', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success' && result.data) {
+                        updateWorldMoodDisplay(result.data);
+                    }
+                })
+                .catch(error => console.error('Error adding world event:', error));
+            }
+        });
+    </script>
+</body>
+</html>

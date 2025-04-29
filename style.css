@@ -1,0 +1,161 @@
+/* Загальні стилі для всього проекту Luxortum */
+
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #121212;
+    color: #f0f0f0;
+    line-height: 1.6;
+}
+
+.container {
+    width: 80%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #fff;
+    border-bottom: 4px solid #4a00e0;
+}
+
+h1 {
+    font-size: 3em;
+    margin-bottom: 10px;
+    text-shadow: 0 0 10px rgba(74, 0, 224, 0.5);
+}
+
+h2 {
+    font-size: 2em;
+    margin-bottom: 15px;
+    color: #8e2de2;
+}
+
+h3 {
+    font-size: 1.5em;
+    margin-bottom: 10px;
+    color: #f0f0f0;
+}
+
+p {
+    font-size: 1.2em;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.btn {
+    display: inline-block;
+    background: linear-gradient(90deg, #4a00e0, #8e2de2);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(142, 45, 226, 0.4);
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(142, 45, 226, 0.6);
+}
+
+footer {
+    text-align: center;
+    padding: 30px 0;
+    margin-top: 60px;
+    color: #888;
+    border-top: 1px solid #333;
+}
+
+/* Анімація для підсвічування тексту */
+@keyframes glow {
+    0% {
+        text-shadow: 0 0 10px rgba(74, 0, 224, 0.5);
+    }
+    50% {
+        text-shadow: 0 0 20px rgba(142, 45, 226, 0.8), 0 0 30px rgba(74, 0, 224, 0.6);
+    }
+    100% {
+        text-shadow: 0 0 10px rgba(74, 0, 224, 0.5);
+    }
+}
+
+/* Різні кольорові схеми */
+.purple-theme {
+    color: #8e2de2;
+}
+
+.blue-theme {
+    color: #4361ee;
+}
+
+.pink-theme {
+    color: #f72585;
+}
+
+.golden-theme {
+    color: #ff9e00;
+}
+
+/* Стилі для карток та контейнерів */
+.card {
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Адаптивний дизайн */
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+    }
+    
+    h1 {
+        font-size: 2.5em;
+    }
+    
+    h2 {
+        font-size: 1.8em;
+    }
+    
+    p {
+        font-size: 1.1em;
+    }
+}
+
+@media (max-width: 480px) {
+    header {
+        padding: 30px 15px;
+    }
+    
+    h1 {
+        font-size: 2em;
+    }
+    
+    h2 {
+        font-size: 1.5em;
+    }
+    
+    p {
+        font-size: 1em;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        font-size: 0.9em;
+    }
+}

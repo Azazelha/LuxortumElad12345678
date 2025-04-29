@@ -1,0 +1,323 @@
+/* Стилі для сторінки Аватара Творця */
+.world-container {
+    position: relative;
+    width: 100%;
+    height: 500px;
+    background: linear-gradient(to bottom, #090928, #1a1a2e);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    margin-bottom: 30px;
+}
+
+.world-ground {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30%;
+    background: linear-gradient(to bottom, #1c2b34, #2a4858);
+    z-index: 1;
+}
+
+.creator-avatar {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    bottom: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    transition: left 0.3s ease, bottom 0.3s ease;
+    cursor: pointer;
+}
+
+.avatar-body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.avatar-aura {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    top: -10px;
+    left: -10px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(74, 0, 224, 0.6) 0%, rgba(142, 45, 226, 0) 70%);
+    z-index: 1;
+    animation: pulse 2s infinite ease-in-out;
+}
+
+.avatar-figure {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, #8e2de2, #4a00e0);
+    border-radius: 50%;
+    z-index: 2;
+    box-shadow: 0 0 15px rgba(74, 0, 224, 0.8);
+}
+
+.world-entity {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.7);
+    z-index: 5;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.world-entity:hover {
+    transform: scale(1.2);
+}
+
+.entity-human {
+    background: radial-gradient(circle, #ff9e00, #f72585);
+}
+
+.entity-angel {
+    background: radial-gradient(circle, #f0f0f0, #4cc9f0);
+    box-shadow: 0 0 15px rgba(76, 201, 240, 0.8);
+}
+
+.entity-demon {
+    background: radial-gradient(circle, #f72585, #b5179e);
+    box-shadow: 0 0 15px rgba(181, 23, 158, 0.8);
+}
+
+.entity-building {
+    background: none;
+    width: 60px;
+    height: 80px;
+    border-radius: 0;
+    border-bottom: 30px solid #2a4858;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+}
+
+.entity-temple {
+    background: none;
+    width: 80px;
+    height: 100px;
+    border-radius: 0;
+    border-bottom: 40px solid #4361ee;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+}
+
+.entity-info {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(26, 26, 46, 0.9);
+    border: 2px solid #4a00e0;
+    border-radius: 10px;
+    padding: 15px;
+    max-width: 80%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 20;
+    display: none;
+}
+
+.entity-name {
+    font-weight: bold;
+    color: #8e2de2;
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+
+.entity-description {
+    margin: 0;
+    font-size: 0.9em;
+}
+
+.entity-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.entity-btn {
+    background: linear-gradient(90deg, #4a00e0, #8e2de2);
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: all 0.2s ease;
+}
+
+.entity-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(142, 45, 226, 0.4);
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.6;
+    }
+}
+
+.control-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.control-section {
+    flex: 1;
+    min-width: 300px;
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.control-title {
+    margin-top: 0;
+    color: #4cc9f0;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+
+.movement-controls {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10px;
+    max-width: 200px;
+    margin: 0 auto;
+}
+
+.move-btn {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border: 2px solid #4a00e0;
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: bold;
+}
+
+.move-btn:hover {
+    background: linear-gradient(135deg, #16213e, #1a1a2e);
+    transform: scale(1.05);
+    box-shadow: 0 0 10px rgba(74, 0, 224, 0.5);
+}
+
+.move-btn:active {
+    transform: scale(0.95);
+}
+
+.btn-up {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.btn-left {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.btn-center {
+    grid-column: 2;
+    grid-row: 2;
+    background: linear-gradient(135deg, #4a00e0, #8e2de2) !important;
+}
+
+.btn-right {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+.btn-down {
+    grid-column: 2;
+    grid-row: 3;
+}
+
+.camera-controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.camera-btn {
+    background: linear-gradient(90deg, #4a00e0, #8e2de2);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(142, 45, 226, 0.4);
+    font-weight: bold;
+}
+
+.camera-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(142, 45, 226, 0.6);
+}
+
+.snapshot-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.snapshot-item {
+    flex: 1;
+    min-width: 200px;
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.snapshot-preview {
+    width: 100%;
+    height: 150px;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border-radius: 5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9em;
+    color: #888;
+}
+
+.snapshot-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.snapshot-title {
+    margin: 0;
+    font-weight: bold;
+    color: #4cc9f0;
+}
+
+.snapshot-timestamp {
+    font-size: 0.8em;
+    color: #888;
+}

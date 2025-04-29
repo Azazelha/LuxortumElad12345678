@@ -1,0 +1,308 @@
+/* Стилі для індикатора настрою світу */
+.world-mood-container {
+    background: rgba(26, 26, 46, 0.8);
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    margin-bottom: 40px;
+}
+
+.mood-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.mood-title {
+    font-size: 1.8em;
+    color: #f0f0f0;
+    margin: 0;
+}
+
+.mood-state {
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px 15px;
+    border-radius: 50px;
+}
+
+.mood-emoji {
+    font-size: 2em;
+    margin-right: 10px;
+}
+
+.mood-name {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.mood-intensity {
+    margin-top: 15px;
+}
+
+.intensity-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.intensity-label span {
+    font-size: 0.9em;
+    color: #aaa;
+}
+
+.intensity-bar {
+    height: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+}
+
+.intensity-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.5s ease;
+}
+
+/* Кольори для різних настроїв */
+.ecstatic .intensity-fill {
+    background: linear-gradient(90deg, #4cc9f0, #7209b7);
+}
+
+.joyful .intensity-fill {
+    background: linear-gradient(90deg, #4361ee, #4cc9f0);
+}
+
+.peaceful .intensity-fill {
+    background: linear-gradient(90deg, #4cc9f0, #7be495);
+}
+
+.neutral .intensity-fill {
+    background: linear-gradient(90deg, #b8b8b8, #d8d8d8);
+}
+
+.anxious .intensity-fill {
+    background: linear-gradient(90deg, #ffbe0b, #fb5607);
+}
+
+.melancholic .intensity-fill {
+    background: linear-gradient(90deg, #8338ec, #3a86ff);
+}
+
+.sad .intensity-fill {
+    background: linear-gradient(90deg, #3a86ff, #0077b6);
+}
+
+.angry .intensity-fill {
+    background: linear-gradient(90deg, #fb5607, #ff006e);
+}
+
+.chaotic .intensity-fill {
+    background: linear-gradient(90deg, #ff006e, #7209b7);
+}
+
+/* Стилі для ефектів настрою */
+.effects-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.effect-item {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    transition: transform 0.3s ease;
+}
+
+.effect-item:hover {
+    transform: translateY(-5px);
+}
+
+.effect-name {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+    color: #f0f0f0;
+}
+
+.effect-value {
+    font-size: 1.8em;
+    font-weight: bold;
+}
+
+.effect-positive {
+    color: #4cc9f0;
+}
+
+.effect-negative {
+    color: #ff006e;
+}
+
+.effect-neutral {
+    color: #b8b8b8;
+}
+
+/* Стилі для історії подій */
+.events-container {
+    margin-top: 30px;
+}
+
+.events-title {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    color: #f0f0f0;
+}
+
+.event-list {
+    max-height: 300px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.event-item {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    transition: transform 0.3s ease;
+}
+
+.event-item:hover {
+    transform: translateX(5px);
+}
+
+.event-impact {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9em;
+    flex-shrink: 0;
+}
+
+.impact-positive {
+    background-color: rgba(76, 201, 240, 0.3);
+    border: 2px solid #4cc9f0;
+    color: #4cc9f0;
+}
+
+.impact-neutral {
+    background-color: rgba(184, 184, 184, 0.3);
+    border: 2px solid #b8b8b8;
+    color: #b8b8b8;
+}
+
+.impact-negative {
+    background-color: rgba(255, 0, 110, 0.3);
+    border: 2px solid #ff006e;
+    color: #ff006e;
+}
+
+.event-content {
+    flex-grow: 1;
+}
+
+.event-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.event-timestamp {
+    font-size: 0.8em;
+    color: #aaa;
+}
+
+/* Стилі для кнопок управління настроєм (для демо-сторінки) */
+.mood-controls {
+    margin-top: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.control-section {
+    margin-bottom: 20px;
+}
+
+.control-title {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    color: #f0f0f0;
+}
+
+.mood-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.mood-button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    background: rgba(26, 26, 46, 0.8);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mood-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.intensity-control {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.add-event-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.event-input {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background: rgba(26, 26, 46, 0.8);
+    color: white;
+    margin-bottom: 10px;
+}
+
+.impact-select {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background: rgba(26, 26, 46, 0.8);
+    color: white;
+    margin-bottom: 15px;
+}
+
+.add-event-button {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background: linear-gradient(90deg, #4a00e0, #8e2de2);
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.add-event-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(142, 45, 226, 0.4);
+}
