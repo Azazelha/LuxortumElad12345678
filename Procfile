@@ -1,1 +1,1 @@
-web: gunicorn main:app
+web: python direct_socket.py

@@ -1,5 +1,12 @@
 flask==2.3.3
-gunicorn==23.0.0
-openai==1.21.0
-requests==2.32.3
-werkzeug==2.3.7
+flask
+gunicorn
+flask
+gunicorn
+requests
+selenium
+requests
+pyyaml
+flask-apscheduler
+pytz
+python-telegram-bot

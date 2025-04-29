@@ -1,0 +1,135 @@
+"""
+Фрагмент коду для інтеграції OpenAI та покращення логіки симуляції
+у проєкті Luxortum.
+"""
+# ... (існуючі імпорти: sqlite3, json, time, os, Flask, request, jsonify, redirect, g, random) ...
+from openai import OpenAI # Імпортуємо клієнт OpenAI
+
+# --- Ініціалізація клієнта OpenAI ---
+# Важливо: API ключ OpenAI потрібно зберігати в змінній оточення
+# або іншим безпечним способом, НЕ в коді.
+# Замініть 'YOUR_OPENAI_API_KEY' на os.environ.get("OPENAI_API_KEY")
+# перед розгортанням у виробничому середовищі.
+openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+# Або для тестування:
+# openai_client = OpenAI(api_key="YOUR_OPENAI_API_KEY")
+
+
+# ... (існуюча конфігурація Flask додатка, TOOLTIPS, DATABASE, get_db, close_db, init_db, init_db_command) ...
+
+# --- Функції для роботи з базою даних (залишаються без змін) ---
+# def get_world_mood_from_db(): ...
+# def save_world_mood_to_db(mood_data): ...
+# def get_initial_world_mood(): ...
+
+# --- Допоміжні функції для розрахунку тренду та ефектів (залишаються без змін) ---
+# def calculate_trend(events): ...
+# def calculate_effects(mood): ...
+
+# --- Логіка Симуляції ---
+
+# Визначення можливих типів подій та їх потенційного впливу
+# Додаємо більш детальні початкові описи для допомоги AI
+EVENT_TYPES = [
+    {"name": "Божественне втручання", "impact": "positive", "base_description": "Світ отримав благословення. Відчувається приплив позитивної енергії."},
+    {"name": "Прояв хаосу", "impact": "negative", "base_description": "Силами хаосу посіяно розбрат. Зростає напруженість."},
+    {"name": "Гармонійне вирівнювання", "impact": "neutral", "base_description": "Енергії світу збалансовано. Відновлюється рівновага."},
+    {"name": "Спалах творчості", "impact": "positive", "base_description": "Натхнення охопило світ. З'являються нові ідеї та форми."},
+    {"name": "Занепад енергії", "impact": "negative", "base_description": "Життєва сила світу зменшується. Відчувається втома."},
+]
+
+async def generate_event_description_with_ai(event_name, event_impact, base_description):
+    """
+    Генерує більш детальний опис події за допомогою OpenAI.
+    Використовуємо асинхронний виклик, якщо це можливо (потребує async Flask або іншого підходу).
+    Для простоти в цьому прикладі використовуємо синхронний виклик.
+    """
+    prompt = f"Напиши короткий, містичний опис для події у світі божественної симуляції. Подія: '{event_name}'. Її вплив: '{event_impact}'. Базовий опис: '{base_description}'. Опис має бути в українській мові, до 50 слів."
+
+    try:
+        # Виконуємо запит до OpenAI API
+        chat_completion = openai_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            model="gpt-3.5-turbo", # Можна використовувати іншу доступну модель
+            max_tokens=100 # Обмежуємо довжину відповіді
+        )
+        # Отримуємо згенерований текст
+        ai_description = chat_completion.choices[0].message.content.strip()
+        return ai_description
+
+    except Exception as e:
+        print(f"Помилка під час генерації опису події за допомогою OpenAI: {str(e)}")
+        # У випадку помилки повертаємо базовий опис
+        return base_description
+
+
+def generate_random_event():
+    """
+    Генерує випадкову подію, включаючи згенерований AI опис.
+    """
+    event_type = random.choice(EVENT_TYPES)
+    base_description = event_type.get("base_description", "Подія відбулася.") # Отримуємо базовий опис
+
+    # Генеруємо розширений опис за допомогою AI (синхронний виклик)
+    # У реальному додатку варто використовувати асинхронні запити, щоб не блокувати сервер
+    extended_description = generate_event_description_with_ai(
+        event_type["name"],
+        event_type["impact"],
+        base_description
+    )
+
+
+    event = {
+        "name": event_type["name"],
+        "impact": event_type["impact"],
+        "timestamp": int(time.time() * 1000),
+        "description": extended_description # Використовуємо розширений опис
+    }
+    return event
+
+# --- apply_event_to_world залишається без змін, вона просто додає подію до списку ---
+# def apply_event_to_world(current_mood_data, event): ...
+
+# --- Маршрут для запуску симуляції (модифікований для використання нової generate_random_event) ---
+@app.route('/api/simulate', methods=['POST'])
+def run_simulation_step():
+    """
+    Запускає один крок симуляції: генерує випадкову подію (з AI описом)
+    та застосовує її до стану світу в базі даних.
+    """
+    try:
+        current_mood_data = get_world_mood_from_db()
+
+        # Генеруємо нову подію (тепер з AI описом)
+        new_event = generate_random_event()
+        print(f"Згенеровано подію: {new_event['name']} ({new_event['impact']}) - {new_event['description']}") # Логуємо подію
+
+        updated_mood_data = apply_event_to_world(current_mood_data, new_event)
+
+        save_world_mood_to_db(updated_mood_data)
+
+        return jsonify({"status": "success", "message": "Крок симуляції виконано", "data": updated_mood_data})
+
+    except Exception as e:
+        print(f"Помилка під час виконання кроку симуляції: {str(e)}")
+        return jsonify({"status": "error", "message": f"Помилка симуляції: {str(e)}"}), 500
+
+
+# --- Модифікований маршрут /api/world-mood (залишається без змін) ---
+# @app.route('/api/world-mood', methods=['GET', 'POST'])
+# def handle_world_mood_with_db(): ...
+
+# --- Інші маршрути (/api/tooltips, /health, /static/, перенаправлення, /hello) залишаються без змін) ---
+# ...
+
+# --- Блок запуску додатка залишається без змін ---
+# if __name__ == '__main__':
+#     port = int(os.environ.get('PORT', 5000))
+#     print(f"Запуск Flask додатка на http://0.0.0.0:{port}")
+#     app.run(host='0.0.0.0', port=port, debug=True)
+

@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxortum - Світ Божественної Симуляції</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #1a0a2a; }
+        canvas { display: block; }
+        #scene-title {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            z-index: 10;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            background-color: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .info-panel {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            z-index: 10;
+            background-color: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 300px;
+        }
+        #creative-mode {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+        }
+        button {
+            background-color: #6a4a9a;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-family: 'Arial', sans-serif;
+        }
+        button:hover {
+            background-color: #8a6aba;
+        }
+    </style>
+</head>
+<body>
+    <div id="scene-title">
+        <h2>Luxortum - Світ Божественної Симуляції</h2>
+        <p>Використовуйте мишу для обертання, прокрутки для масштабування</p>
+    </div>
+    
+    <div class="info-panel">
+        <h3>Про світ</h3>
+        <p>Люксортум - світ кабалістичних традицій, де чоловічі зв'язки формують основу суспільства. 
+        Оголені мешканці вільно живуть у гармонії з природою, а храми та духовні споруди відображають 
+        космологічну ієрархію творіння.</p>
+    </div>
+    
+    <div id="creative-mode">
+        <button id="toggle-camera">Режим Творця</button>
+        <button id="add-human">Додати Мешканця</button>
+    </div>
+    
+    <script>
+        // --- Налаштування сцени ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87CEEB); // Колір неба (світло-голубий)
+        
+        // --- Налаштування камери ---
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 5, 20); // Початкова позиція камери
+        
+        // --- Налаштування рендерера ---
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true; // Вмикаємо тіні
+        document.body.appendChild(renderer.domElement);
+        
+        // --- Додаємо керування камерою ---
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+        controls.screenSpacePanning = false;
+        controls.maxPolarAngle = Math.PI / 2; // Обмежуємо нахил камери
+        controls.minDistance = 5;
+        controls.maxDistance = 50;
+        
+        // --- Освітлення ---
+        // Головне сонячне світло
+        const sunLight = new THREE.DirectionalLight(0xfffacd, 1);
+        sunLight.position.set(50, 50, 30);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 2048;
+        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.camera.near = 0.5;
+        sunLight.shadow.camera.far = 500;
+        sunLight.shadow.camera.left = -50;
+        sunLight.shadow.camera.right = 50;
+        sunLight.shadow.camera.top = 50;
+        sunLight.shadow.camera.bottom = -50;
+        scene.add(sunLight);
+        
+        // Додаткове розсіяне світло
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+        scene.add(ambientLight);
+        
+        // --- Створення ландшафту ---
+        // 1. Основна земля (не плаваючий острів)
+        const terrainSize = 100;
+        const terrainSegments = 100;
+        const terrainGeometry = new THREE.PlaneGeometry(terrainSize, terrainSize, terrainSegments, terrainSegments);
+        
+        // Додаємо деталі для реалістичного ландшафту
+        const positionAttribute = terrainGeometry.attributes.position;
+        for (let i = 0; i < positionAttribute.count; i++) {
+            // Створюємо пагорби та долини
+            const x = positionAttribute.getX(i);
+            const y = positionAttribute.getY(i);
+            
+            // Використовуємо шум Перліна (спрощена імітація)
+            let noise = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 2;
+            noise += Math.sin(x * 0.1) * Math.cos(y * 0.1);
+            
+            // Додаємо гори на периферії
+            const distanceFromCenter = Math.sqrt(x * x + y * y);
+            const mountainFactor = Math.max(0, (distanceFromCenter - 30) / 10);
+            noise += mountainFactor * 3;
+            
+            // Заглиблення в центрі для озера
+            const lakeDepression = Math.max(0, 4 - distanceFromCenter / 5);
+            
+            positionAttribute.setZ(i, noise - lakeDepression);
+        }
+        
+        terrainGeometry.computeVertexNormals();
+        
+        // Текстура трави
+        const grassMaterial = new THREE.MeshStandardMaterial({
+            color: 0x4caf50,
+            roughness: 0.8,
+            metalness: 0.1,
+            flatShading: false
+        });
+        
+        const terrain = new THREE.Mesh(terrainGeometry, grassMaterial);
+        terrain.rotation.x = -Math.PI / 2; // Горизонтально
+        terrain.position.y = -2;
+        terrain.receiveShadow = true;
+        scene.add(terrain);
+        
+        // 2. Озеро в центрі
+        const lakeGeometry = new THREE.CircleGeometry(12, 32);
+        const lakeMaterial = new THREE.MeshStandardMaterial({
+            color: 0x1a75ff,
+            metalness: 0.9,
+            roughness: 0.1,
+            transparent: true,
+            opacity: 0.8
+        });
+        
+        const lake = new THREE.Mesh(lakeGeometry, lakeMaterial);
+        lake.rotation.x = -Math.PI / 2;
+        lake.position.y = -1.9; // Трохи вище, ніж земля
+        scene.add(lake);
+        
+        // 3. Храм (центральна споруда)
+        const templeGroup = new THREE.Group();
+        
+        // Основа храму
+        const templeBaseGeometry = new THREE.BoxGeometry(15, 1.5, 15);
+        const templeBaseMaterial = new THREE.MeshStandardMaterial({ color: 0xf5f5dc });
+        const templeBase = new THREE.Mesh(templeBaseGeometry, templeBaseMaterial);
+        templeBase.position.y = 0.75;
+        templeBase.receiveShadow = true;
+        templeBase.castShadow = true;
+        templeGroup.add(templeBase);
+        
+        // Колони
+        const createColumn = (x, z) => {
+            const columnGeometry = new THREE.CylinderGeometry(0.6, 0.7, 6, 16);
+            const columnMaterial = new THREE.MeshStandardMaterial({ color: 0xfffafa });
+            const column = new THREE.Mesh(columnGeometry, columnMaterial);
+            column.position.set(x, 4, z);
+            column.castShadow = true;
+            
+            // Додаємо капітель
+            const capGeometry = new THREE.BoxGeometry(1.5, 0.5, 1.5);
+            const capMaterial = new THREE.MeshStandardMaterial({ color: 0xfffafa });
+            const cap = new THREE.Mesh(capGeometry, capMaterial);
+            cap.position.y = 3.25;
+            column.add(cap);
+            
+            return column;
+        };
+        
+        // Розміщуємо колони з чотирьох сторін
+        const columnPositions = [
+            { x: -6, z: -6 }, { x: -6, z: -2 }, { x: -6, z: 2 }, { x: -6, z: 6 },
+            { x: 6, z: -6 }, { x: 6, z: -2 }, { x: 6, z: 2 }, { x: 6, z: 6 },
+            { x: -2, z: -6 }, { x: 2, z: -6 },
+            { x: -2, z: 6 }, { x: 2, z: 6 }
+        ];
+        
+        columnPositions.forEach(pos => {
+            templeGroup.add(createColumn(pos.x, pos.z));
+        });
+        
+        // Верхня частина храму (дах)
+        const roofGeometry = new THREE.CylinderGeometry(12, 8, 3, 4);
+        const roofMaterial = new THREE.MeshStandardMaterial({ color: 0xd4af37 });
+        const roof = new THREE.Mesh(roofGeometry, roofMaterial);
+        roof.position.y = 8;
+        roof.castShadow = true;
+        roof.rotation.y = Math.PI / 4; // Поворот для піраміди
+        templeGroup.add(roof);
+        
+        // Вівтар у центрі храму
+        const altarGeometry = new THREE.BoxGeometry(3, 2, 3);
+        const altarMaterial = new THREE.MeshStandardMaterial({ color: 0xb22222 });
+        const altar = new THREE.Mesh(altarGeometry, altarMaterial);
+        altar.position.y = 2;
+        altar.castShadow = true;
+        templeGroup.add(altar);
+        
+        // Символи Кабали на вівтарі (спрощена геометрія)
+        const symbolGeometry = new THREE.TorusGeometry(0.8, 0.1, 8, 16);
+        const symbolMaterial = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffd700, emissiveIntensity: 0.5 });
+        const symbol = new THREE.Mesh(symbolGeometry, symbolMaterial);
+        symbol.position.y = 3.1;
+        symbol.rotation.x = Math.PI / 2;
+        altar.add(symbol);
+        
+        // Розміщуємо храм у сцені
+        templeGroup.position.y = 0;
+        scene.add(templeGroup);
+        
+        // 4. Створення оголених персонажів (спрощені моделі)
+        const humanGroup = new THREE.Group();
+        
+        // Функція для створення однієї людини (спрощена модель)
+        function createHuman(x, z, scale = 1, color = 0xffe0bd) {
+            const figure = new THREE.Group();
+            
+            // Тіло (торс)
+            const bodyGeometry = new THREE.CylinderGeometry(0.5 * scale, 0.3 * scale, 1.5 * scale, 8);
+            const bodyMaterial = new THREE.MeshStandardMaterial({ color: color });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.position.y = 1.5 * scale;
+            body.castShadow = true;
+            figure.add(body);
+            
+            // Голова
+            const headGeometry = new THREE.SphereGeometry(0.5 * scale, 16, 16);
+            const headMaterial = new THREE.MeshStandardMaterial({ color: color });
+            const head = new THREE.Mesh(headGeometry, headMaterial);
+            head.position.y = 3 * scale;
+            head.castShadow = true;
+            
+            // Додаємо очі
+            const eyeGeometry = new THREE.SphereGeometry(0.1 * scale, 8, 8);
+            const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            
+            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            leftEye.position.set(0.2 * scale, 0.1 * scale, 0.4 * scale);
+            head.add(leftEye);
+            
+            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            rightEye.position.set(-0.2 * scale, 0.1 * scale, 0.4 * scale);
+            head.add(rightEye);
+            
+            figure.add(head);
+            
+            // Ноги
+            const legGeometry = new THREE.CylinderGeometry(0.15 * scale, 0.15 * scale, 1.5 * scale, 8);
+            const legMaterial = new THREE.MeshStandardMaterial({ color: color });
+            
+            const leftLeg = new THREE.Mesh(legGeometry, legMaterial);
+            leftLeg.position.set(0.3 * scale, 0.25 * scale, 0);
+            leftLeg.castShadow = true;
+            figure.add(leftLeg);
+            
+            const rightLeg = new THREE.Mesh(legGeometry, legMaterial);
+            rightLeg.position.set(-0.3 * scale, 0.25 * scale, 0);
+            rightLeg.castShadow = true;
+            figure.add(rightLeg);
+            
+            // Руки
+            const armGeometry = new THREE.CylinderGeometry(0.15 * scale, 0.15 * scale, 1.2 * scale, 8);
+            const armMaterial = new THREE.MeshStandardMaterial({ color: color });
+            
+            const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+            leftArm.position.set(0.8 * scale, 1.5 * scale, 0);
+            leftArm.rotation.z = Math.PI / 6;
+            leftArm.castShadow = true;
+            figure.add(leftArm);
+            
+            const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+            rightArm.position.set(-0.8 * scale, 1.5 * scale, 0);
+            rightArm.rotation.z = -Math.PI / 6;
+            rightArm.castShadow = true;
+            figure.add(rightArm);
+            
+            // Геніталії (спрощено, без деталей)
+            const genitalGeometry = new THREE.SphereGeometry(0.15 * scale, 8, 8);
+            const genitalMaterial = new THREE.MeshStandardMaterial({ color: color });
+            const genitals = new THREE.Mesh(genitalGeometry, genitalMaterial);
+            genitals.position.set(0, 0.7 * scale, 0.2 * scale);
+            genitals.castShadow = true;
+            figure.add(genitals);
+            
+            // Розміщуємо фігуру
+            figure.position.set(x, 0, z);
+            
+            // Додаємо властивості для анімації
+            figure.userData = {
+                walkSpeed: Math.random() * 0.02 + 0.01,
+                walkDirection: Math.random() * Math.PI * 2,
+                breathSpeed: Math.random() * 0.005 + 0.002,
+                blinkInterval: Math.random() * 3000 + 2000,
+                lastBlink: Date.now(),
+                originalEyeScale: { x: 1, y: 1, z: 1 }
+            };
+            
+            // Зберігаємо посилання на очі для анімації моргання
+            figure.userData.leftEye = leftEye;
+            figure.userData.rightEye = rightEye;
+            figure.userData.head = head;
+            figure.userData.body = body;
+            
+            return figure;
+        }
+        
+        // Створюємо кілька персонажів
+        const numberOfHumans = 12;
+        const humanPositions = [];
+        
+        // Створюємо людей навколо храму та озера
+        for (let i = 0; i < numberOfHumans; i++) {
+            // Випадкова позиція на безпечній відстані від храму і озера
+            let x, z;
+            let isValidPosition = false;
+            
+            while (!isValidPosition) {
+                // Випадкова позиція в межах ландшафту
+                x = (Math.random() - 0.5) * 70;
+                z = (Math.random() - 0.5) * 70;
+                
+                // Перевіряємо, чи не надто близько до храму
+                const distFromTemple = Math.sqrt(x*x + z*z);
+                
+                // Перевіряємо, чи не в озері, але дозволяємо деяким бути поруч із озером
+                const distFromCenter = Math.sqrt(x*x + z*z);
+                
+                if ((distFromTemple > 20 || distFromTemple < 10) && distFromCenter > 10) {
+                    isValidPosition = true;
+                    
+                    // Також перевіряємо, чи не надто близько до інших людей
+                    for (const pos of humanPositions) {
+                        const dx = pos.x - x;
+                        const dz = pos.z - z;
+                        const dist = Math.sqrt(dx*dx + dz*dz);
+                        
+                        if (dist < 5) {
+                            isValidPosition = false;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Зберігаємо позицію
+            humanPositions.push({ x, z });
+            
+            // Різні відтінки шкіри
+            const skinColors = [0xffe0bd, 0xf1c27d, 0xe0ac69, 0xc68642, 0x8d5524];
+            const skinColor = skinColors[Math.floor(Math.random() * skinColors.length)];
+            
+            // Створюємо людину
+            const human = createHuman(x, z, 1 + Math.random() * 0.2, skinColor);
+            humanGroup.add(human);
+        }
+        
+        scene.add(humanGroup);
+        
+        // 5. Ангели/Демони (в небі та під землею)
+        const angelGroup = new THREE.Group();
+        
+        // Функція для створення ангела (світиться)
+        function createAngel(x, y, z, isAngel = true) {
+            const angel = new THREE.Group();
+            
+            // Тіло (базова модель людини, але світиться)
+            const color = isAngel ? 0xffffff : 0x8b0000; // Білий для ангела, темно-червоний для демона
+            const emissive = isAngel ? 0xffffcc : 0x8b0000;
+            const glow = isAngel ? 0.5 : 0.3;
+            
+            // Основне тіло (як у людини, але світиться)
+            const human = createHuman(0, 0, 1.2, color);
+            
+            // Змінюємо матеріали на такі, що світяться
+            human.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = new THREE.MeshStandardMaterial({ 
+                        color: color, 
+                        emissive: emissive, 
+                        emissiveIntensity: glow,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+                }
+            });
+            
+            angel.add(human);
+            
+            // Додаємо крила для ангела або демона
+            const wingGeometry = new THREE.BoxGeometry(0.1, 2, 3);
+            const wingMaterial = new THREE.MeshStandardMaterial({ 
+                color: color, 
+                emissive: emissive, 
+                emissiveIntensity: glow,
+                transparent: true,
+                opacity: 0.8,
+                side: THREE.DoubleSide
+            });
+            
+            // Ліве крило
+            const leftWing = new THREE.Mesh(wingGeometry, wingMaterial);
+            leftWing.position.set(1, 1.5, 0);
+            leftWing.rotation.y = Math.PI / 2;
+            leftWing.rotation.z = Math.PI / 6;
+            angel.add(leftWing);
+            
+            // Праве крило
+            const rightWing = new THREE.Mesh(wingGeometry, wingMaterial);
+            rightWing.position.set(-1, 1.5, 0);
+            rightWing.rotation.y = Math.PI / 2;
+            rightWing.rotation.z = -Math.PI / 6;
+            angel.add(rightWing);
+            
+            // Зберігаємо крила для анімації
+            angel.userData = {
+                leftWing: leftWing,
+                rightWing: rightWing,
+                wingSpeed: Math.random() * 0.02 + 0.01,
+                floatSpeed: Math.random() * 0.005 + 0.002,
+                originalY: y
+            };
+            
+            angel.position.set(x, y, z);
+            return angel;
+        }
+        
+        // Створюємо кілька ангелів у небі
+        for (let i = 0; i < 5; i++) {
+            const x = (Math.random() - 0.5) * 60;
+            const y = 15 + Math.random() * 10;
+            const z = (Math.random() - 0.5) * 60;
+            
+            const angel = createAngel(x, y, z, true);
+            angelGroup.add(angel);
+        }
+        
+        // Створюємо кілька демонів (під землею, видно через "розлом" чи з темних місць)
+        for (let i = 0; i < 3; i++) {
+            const x = (Math.random() - 0.5) * 40;
+            const y = -10 + Math.random() * 5;
+            const z = (Math.random() - 0.5) * 40;
+            
+            const demon = createAngel(x, y, z, false);
+            angelGroup.add(demon);
+        }
+        
+        scene.add(angelGroup);
+        
+        // 6. Рослинність (дерева, кущі)
+        const vegetationGroup = new THREE.Group();
+        
+        // Функція для створення дерева
+        function createTree(x, z, scale = 1) {
+            const tree = new THREE.Group();
+            
+            // Стовбур
+            const trunkGeometry = new THREE.CylinderGeometry(0.2 * scale, 0.3 * scale, 2 * scale, 8);
+            const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+            const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+            trunk.position.y = 1 * scale;
+            trunk.castShadow = true;
+            tree.add(trunk);
+            
+            // Крона (листя)
+            const leavesGeometry = new THREE.SphereGeometry(1 * scale, 8, 8);
+            const leavesMaterial = new THREE.MeshStandardMaterial({ color: 0x228b22 });
+            const leaves = new THREE.Mesh(leavesGeometry, leavesMaterial);
+            leaves.position.y = 2.5 * scale;
+            leaves.castShadow = true;
+            tree.add(leaves);
+            
+            // Додаємо легку деформацію для реалістичності
+            leaves.scale.set(
+                1 + (Math.random() - 0.5) * 0.2,
+                1 + Math.random() * 0.2,
+                1 + (Math.random() - 0.5) * 0.2
+            );
+            
+            tree.position.set(x, 0, z);
+            
+            // Додаємо властивості для анімації (легкий рух від вітру)
+            tree.userData = {
+                leaves: leaves,
+                windSpeed: Math.random() * 0.002 + 0.001,
+                windStrength: Math.random() * 0.05 + 0.02
+            };
+            
+            return tree;
+        }
+        
+        // Створюємо кілька дерев
+        for (let i = 0; i < 30; i++) {
+            // Випадкові позиції, але не надто близько до храму чи озера
+            let x, z;
+            let isValidPosition = false;
+            
+            while (!isValidPosition) {
+                x = (Math.random() - 0.5) * 90;
+                z = (Math.random() - 0.5) * 90;
+                
+                // Перевіряємо відстань від храму та озера
+                const distFromCenter = Math.sqrt(x*x + z*z);
+                
+                if (distFromCenter > 15) {
+                    isValidPosition = true;
+                }
+            }
+            
+            const treeScale = 1 + Math.random();
+            const tree = createTree(x, z, treeScale);
+            vegetationGroup.add(tree);
+        }
+        
+        scene.add(vegetationGroup);
+        
+        // --- Режим керування "Творцем" ---
+        let creatorMode = false;
+        const creatorCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        creatorCamera.position.copy(camera.position);
+        
+        // Аватар творця (видимий тільки для інших)
+        const creatorAvatar = new THREE.Group();
+        
+        // Тіло творця (більше і яскравіше)
+        const creatorFigure = createHuman(0, 0, 2, 0xffd700);
+        creatorFigure.traverse((child) => {
+            if (child.isMesh) {
+                child.material = new THREE.MeshStandardMaterial({ 
+                    color: 0xffd700, 
+                    emissive: 0xffd700, 
+                    emissiveIntensity: 0.7
+                });
+            }
+        });
+        
+        // Додаємо світіння навколо (ореол)
+        const haloGeometry = new THREE.TorusGeometry(1.5, 0.2, 8, 32);
+        const haloMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0xffffff, 
+            transparent: true, 
+            opacity: 0.7
+        });
+        const halo = new THREE.Mesh(haloGeometry, haloMaterial);
+        halo.rotation.x = Math.PI / 2;
+        halo.position.y = 5;
+        creatorFigure.add(halo);
+        
+        creatorAvatar.add(creatorFigure);
+        creatorAvatar.position.set(0, 3, 0);
+        creatorAvatar.visible = false;
+        scene.add(creatorAvatar);
+        
+        // Кнопка для перемикання режиму
+        document.getElementById('toggle-camera').addEventListener('click', () => {
+            creatorMode = !creatorMode;
+            if (creatorMode) {
+                // Зберігаємо поточну позицію камери
+                creatorCamera.position.copy(camera.position);
+                creatorCamera.rotation.copy(camera.rotation);
+                document.getElementById('toggle-camera').textContent = 'Режим Глядача';
+                creatorAvatar.visible = true;
+            } else {
+                document.getElementById('toggle-camera').textContent = 'Режим Творця';
+                creatorAvatar.visible = false;
+            }
+        });
+        
+        // Кнопка для додавання нового мешканця
+        document.getElementById('add-human').addEventListener('click', () => {
+            // Додаємо людину перед поточною позицією камери
+            const direction = new THREE.Vector3();
+            camera.getWorldDirection(direction);
+            
+            const distance = 10;
+            const x = camera.position.x + direction.x * distance;
+            const z = camera.position.z + direction.z * distance;
+            
+            // Різні відтінки шкіри
+            const skinColors = [0xffe0bd, 0xf1c27d, 0xe0ac69, 0xc68642, 0x8d5524];
+            const skinColor = skinColors[Math.floor(Math.random() * skinColors.length)];
+            
+            const human = createHuman(x, 0, z, 1 + Math.random() * 0.2, skinColor);
+            humanGroup.add(human);
+        });
+        
+        // --- Анімаційний цикл ---
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Оновлюємо керування камерою
+            controls.update();
+            
+            const now = Date.now();
+            
+            // Анімація води (легке коливання)
+            lake.position.y = -1.9 + Math.sin(now * 0.0005) * 0.05;
+            
+            // Анімація людей
+            humanGroup.children.forEach(human => {
+                // Дихання (розширення/звуження грудей)
+                if (human.userData.body) {
+                    human.userData.body.scale.x = 1 + Math.sin(now * human.userData.breathSpeed) * 0.05;
+                    human.userData.body.scale.z = 1 + Math.sin(now * human.userData.breathSpeed) * 0.05;
+                }
+                
+                // Моргання
+                if (now - human.userData.lastBlink > human.userData.blinkInterval) {
+                    // Закриваємо очі
+                    if (human.userData.leftEye && human.userData.rightEye) {
+                        human.userData.leftEye.scale.y = 0.1;
+                        human.userData.rightEye.scale.y = 0.1;
+                    }
+                    
+                    // Відкриваємо очі через 150 мс
+                    setTimeout(() => {
+                        if (human.userData.leftEye && human.userData.rightEye) {
+                            human.userData.leftEye.scale.y = 1;
+                            human.userData.rightEye.scale.y = 1;
+                        }
+                    }, 150);
+                    
+                    human.userData.lastBlink = now;
+                }
+                
+                // Ходіння (рух по сцені)
+                const walkAngle = now * human.userData.walkSpeed;
+                
+                // Рухаємо фігуру
+                human.position.x += Math.sin(human.userData.walkDirection) * human.userData.walkSpeed;
+                human.position.z += Math.cos(human.userData.walkDirection) * human.userData.walkSpeed;
+                
+                // Повертаємо фігуру в напрямку руху
+                human.rotation.y = human.userData.walkDirection;
+                
+                // Перевіряємо межі та змінюємо напрямок, якщо досягли краю
+                if (human.position.x > 45 || human.position.x < -45 ||
+                    human.position.z > 45 || human.position.z < -45) {
+                    human.userData.walkDirection = (human.userData.walkDirection + Math.PI) % (Math.PI * 2);
+                }
+                
+                // Випадкова зміна напрямку іноді
+                if (Math.random() < 0.005) {
+                    human.userData.walkDirection = Math.random() * Math.PI * 2;
+                }
+                
+                // Імітація кроків (легке похитування)
+                human.position.y = Math.abs(Math.sin(walkAngle * 5)) * 0.1;
+            });
+            
+            // Анімація ангелів/демонів
+            angelGroup.children.forEach(angel => {
+                // Плавний політ вгору-вниз
+                angel.position.y = angel.userData.originalY + Math.sin(now * angel.userData.floatSpeed) * 1.5;
+                
+                // Рух крил
+                if (angel.userData.leftWing && angel.userData.rightWing) {
+                    angel.userData.leftWing.rotation.z = Math.PI / 6 + Math.sin(now * angel.userData.wingSpeed) * 0.2;
+                    angel.userData.rightWing.rotation.z = -Math.PI / 6 - Math.sin(now * angel.userData.wingSpeed) * 0.2;
+                }
+            });
+            
+            // Анімація рослинності
+            vegetationGroup.children.forEach(tree => {
+                if (tree.userData.leaves) {
+                    // Легкий рух від вітру
+                    tree.userData.leaves.position.x = Math.sin(now * tree.userData.windSpeed) * tree.userData.windStrength;
+                    tree.userData.leaves.rotation.z = Math.sin(now * tree.userData.windSpeed * 1.5) * 0.05;
+                }
+            });
+            
+            // Анімація світла (день/ніч)
+            const dayNightCycle = (Math.sin(now * 0.0001) + 1) * 0.5; // Від 0 до 1
+            sunLight.intensity = 0.5 + dayNightCycle * 0.5;
+            
+            // Колір неба змінюється залежно від циклу дня/ночі
+            const skyColor = new THREE.Color(0x87CEEB).lerp(new THREE.Color(0x191970), 1 - dayNightCycle);
+            scene.background = skyColor;
+            
+            // Режим творця (переміщення аватара за камерою)
+            if (creatorMode) {
+                const camDirection = new THREE.Vector3();
+                camera.getWorldDirection(camDirection);
+                
+                creatorAvatar.position.copy(camera.position);
+                creatorAvatar.position.y -= 1; // Трохи нижче камери
+                
+                // Орієнтація аватара за напрямком камери
+                const targetRotation = Math.atan2(camDirection.x, camDirection.z);
+                creatorAvatar.rotation.y = targetRotation;
+            }
+            
+            // Рендеримо сцену
+            renderer.render(scene, camera);
+        }
+        
+        // --- Обробка зміни розміру вікна ---
+        window.addEventListener('resize', onWindowResize, false);
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            creatorCamera.aspect = window.innerWidth / window.innerHeight;
+            creatorCamera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Запускаємо анімаційний цикл
+        animate();
+    </script>
+</body>
+</html>

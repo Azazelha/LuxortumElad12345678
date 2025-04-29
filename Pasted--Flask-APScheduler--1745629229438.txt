@@ -1,0 +1,123 @@
+"""
+Фрагмент коду для додавання автономного запуску симуляції
+за допомогою Flask-APScheduler.
+"""
+# ... (існуючі імпорти: sqlite3, json, time, os, Flask, request, jsonify, redirect, g, random, OpenAI) ...
+
+# Додаємо імпорт для APScheduler
+from flask_apscheduler import APScheduler
+
+# ... (існуюча ініціалізація клієнта OpenAI) ...
+# openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+
+# ... (існуюча конфігурація Flask додатка) ...
+# app = Flask(__name__)
+# app.secret_key = os.environ.get("SESSION_SECRET", "luxortum_secret_key")
+
+# --- Конфігурація APScheduler ---
+class Config:
+    # Встановлюємо планувальник завдань
+    SCHEDULER_API_ENABLED = True # Дозволити доступ до API планувальника (опціонально, для налагодження)
+    SCHEDLER_JOB_DEFAULTS = {
+        'coalesce': False,
+        'max_instances': 1
+    }
+    SCHEDULER_EXECUTORS = {
+        'default': {'type': 'threadpool', 'max_workers': 20}
+    }
+    # Тип сховища для завдань. Використовуємо пам'ять для простоти.
+    # Для виробничого середовища варто використовувати стійке сховище (наприклад, SQLAlchemy)
+    SCHEDULER_JOBSTORES = {
+        'default': {'type': 'memory'}
+    }
+
+app.config.from_object(Config()) # Застосовуємо конфігурацію планувальника
+
+# Ініціалізуємо планувальник
+scheduler = APScheduler()
+scheduler.init_app(app)
+scheduler.start() # Запускаємо планувальник
+
+# --- Функції для роботи з базою даних (залишаються без змін) ---
+# def get_world_mood_from_db(): ...
+# def save_world_mood_to_db(mood_data): ...
+# def get_initial_world_mood(): ...
+
+# --- Допоміжні функції для розрахунку тренду та ефектів (залишаються без змін) ---
+# def calculate_trend(events): ...
+# def calculate_effects(mood): ...
+
+# --- Логіка Симуляції ---
+
+# ... (існуюче визначення EVENT_TYPES) ...
+# EVENT_TYPES = [...]
+
+# ... (існуюча функція generate_event_description_with_ai) ...
+# def generate_event_description_with_ai(...): ...
+
+# ... (існуюча функція generate_random_event) ...
+# def generate_random_event(): ...
+
+# ... (існуюча функція apply_event_to_world) ...
+# def apply_event_to_world(current_mood_data, event): ...
+
+# --- Функція, яка буде виконуватися за розкладом ---
+def run_autonomous_simulation_step():
+    """
+    Виконує один крок симуляції автономно.
+    Ця функція викликається планувальником.
+    """
+    # Отримуємо контекст додатка, оскільки планувальник працює поза запитом
+    with app.app_context():
+        try:
+            # Отримуємо поточний стан світу з БД
+            current_mood_data = get_world_mood_from_db()
+
+            # Генеруємо нову подію
+            new_event = generate_random_event()
+            print(f"Автономна симуляція: Згенеровано подію: {new_event['name']} ({new_event['impact']}) - {new_event['description']}") # Логуємо подію
+
+            # Застосовуємо подію до стану світу
+            updated_mood_data = apply_event_to_world(current_mood_data, new_event)
+
+            # Зберігаємо оновлений стан світу в БД
+            save_world_mood_to_db(updated_mood_data)
+
+            print("Автономна симуляція: Крок виконано успішно.")
+
+        except Exception as e:
+            print(f"Автономна симуляція: Помилка під час виконання кроку: {str(e)}")
+            # У випадку помилки автономної симуляції, можливо, варто записати її в лог
+            # або повідомити адміністратора, але не зупиняти додаток.
+
+
+# --- Додаємо завдання до планувальника ---
+# Запускати функцію run_autonomous_simulation_step кожні 5 хвилин (приклад)
+# Можна налаштувати інтервал за Вашим бажанням
+scheduler.add_job(
+    id='autonomous_simulation_job', # Унікальний ідентифікатор завдання
+    func=run_autonomous_simulation_step, # Функція, яку потрібно виконати
+    trigger='interval', # Тип тригера - інтервал
+    minutes=5, # Інтервал - кожні 5 хвилин
+    # seconds=10, # Для тестування можна встановити менший інтервал, наприклад, 10 секунд
+    start_date='2023-01-01 00:00:00' # Дата початку (може бути в минулому)
+)
+
+
+# --- Маршрут для запуску симуляції (залишається для ручного запуску/тестування) ---
+# @app.route('/api/simulate', methods=['POST'])
+# def run_simulation_step(): ...
+
+# --- Модифікований маршрут /api/world-mood (залишається без змін) ---
+# @app.route('/api/world-mood', methods=['GET', 'POST'])
+# def handle_world_mood_with_db(): ...
+
+# --- Інші маршрути (/api/tooltips, /health, /static/, перенаправлення, /hello) залишаються без змін) ---
+# ...
+
+# --- Блок запуску додатка залишається без змін ---
+# if __name__ == '__main__':
+#     port = int(os.environ.get('PORT', 5000))
+#     print(f"Запуск Flask додатка на http://0.0.0.0:{port}")
+#     app.run(host='0.0.0.0', port=port, debug=True)
+

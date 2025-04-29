@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxortum - Панель Управління Світом</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1a0a2a; /* Темний фон */
+            color: #ffffff; /* Білий текст */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Вирівнюємо по верхньому краю */
+            min-height: 100vh;
+            flex-direction: column; /* Елементи розташовуються вертикально */
+            gap: 20px; /* Відстань між секціями */
+        }
+
+        .container {
+            background-color: #4a2a8a; /* Пурпуровий відтінок */
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            width: 90%;
+            box-sizing: border-box; /* Враховуємо padding у розмірі */
+        }
+
+        h1, h2 {
+            color: #ffbb00; /* Золотистий колір для заголовків */
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .mood-info p {
+            font-size: 1.1em;
+            margin: 10px 0;
+            display: flex; /* Використовуємо flexbox для вирівнювання */
+            justify-content: space-between; /* Розподіляємо простір */
+        }
+
+        .mood-info span {
+            font-weight: bold;
+            color: #ffd700; /* Золотистий для ключових значень */
+        }
+
+         /* --- Візуальні індикатори для настрою та тренду --- */
+        .mood-value {
+             font-weight: bold;
+             /* Колір залежно від настрою */
+        }
+        .mood-value.ecstatic { color: #ffff00; } /* Яскраво-жовтий */
+        .mood-value.joyful { color: #00ff00; } /* Зелений */
+        .mood-value.peaceful { color: #00ffff; } /* Блакитний */
+        .mood-value.neutral { color: #cccccc; } /* Сірий */
+        .mood-value.anxious { color: #ff8c00; } /* Помаранчевий */
+        .mood-value.melancholic { color: #8a2be2; } /* Синьо-фіолетовий */
+        .mood-value.sad { color: #0000ff; } /* Синій */
+        .mood-value.angry { color: #ff0000; } /* Червоний */
+        .mood-value.chaotic { color: #ff00ff; } /* Пурпуровий */
+
+
+        .trend-value {
+             font-weight: bold;
+        }
+        .trend-value.improving { color: #00ff00; } /* Зелений - позитивний тренд */
+        .trend-value.worsening { color: #ff0000; } /* Червоний - негативний тренд */
+        .trend-value.stable { color: #cccccc; } /* Сірий - стабільний тренд */
+
+
+        /* --- Візуальний індикатор інтенсивності (проста смужка) --- */
+        .intensity-bar-container {
+            width: 100%;
+            background-color: #6a4a9a;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden; /* Ховаємо те, що виходить за межі */
+        }
+        .intensity-bar {
+            height: 15px;
+            background-color: #ffd700; /* Золотистий колір смужки */
+            width: 0%; /* Початкова ширина 0, буде змінюватися JS */
+            border-radius: 5px;
+             transition: width 0.5s ease-in-out; /* Плавний перехід при зміні ширини */
+        }
+
+
+        .effects-list ul {
+             list-style: none;
+             padding: 0;
+             margin-top: 5px;
+        }
+
+        .effects-list li {
+            background-color: #6a4a9a;
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            opacity: 0.9;
+             display: flex; /* Для вирівнювання ключа і значення */
+             justify-content: space-between;
+             font-size: 0.9em;
+        }
+
+
+        .events-list {
+            margin-top: 20px;
+            border-top: 1px solid #6a4a9a;
+            padding-top: 15px;
+            text-align: left;
+        }
+
+        .events-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .events-list li {
+            background-color: #6a4a9a;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            opacity: 0.9;
+             font-size: 0.9em;
+        }
+
+        /* --- Секція керування настроєм --- */
+        .mood-control {
+             margin-top: 20px;
+             border-top: 1px solid #6a4a9a;
+             padding-top: 15px;
+             text-align: center;
+        }
+
+        .mood-control h2 {
+             margin-bottom: 10px;
+        }
+
+        .mood-buttons button {
+             background-color: #ffbb00;
+             color: #1a0a2a;
+             border: none;
+             padding: 10px 15px;
+             margin: 5px;
+             border-radius: 5px;
+             cursor: pointer;
+             font-size: 1em;
+             transition: background-color 0.3s ease;
+        }
+
+        .mood-buttons button:hover {
+             background-color: #ffd700;
+        }
+
+         .mood-buttons button:active {
+             background-color: #ccaa00;
+         }
+
+        /* --- Секція підказок --- */
+        .tooltips-section {
+             background-color: #4a2a8a;
+             padding: 30px;
+             border-radius: 15px;
+             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+             max-width: 600px;
+             width: 90%;
+             box-sizing: border-box;
+        }
+
+        .tooltips-list ul {
+             list-style: none;
+             padding: 0;
+        }
+
+        .tooltips-list li {
+             background-color: #6a4a9a;
+             padding: 10px;
+             margin-bottom: 8px;
+             border-radius: 8px;
+             opacity: 0.9;
+             font-size: 0.9em;
+        }
+
+        .error-message {
+            color: #ff0000;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .loading {
+            font-style: italic;
+            opacity: 0.7;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Панель Управління Настроєм Світу Luxortum</h1>
+
+        <div id="world-mood-info" class="mood-info">
+            <p class="loading">Завантаження даних про настрій світу...</p>
+            <p>Настрій: <span id="current-mood-value">--</span></p>
+             <p>Інтенсивність: <span id="current-intensity-value">--</span></p>
+              <div class="intensity-bar-container"><div id="intensity-bar" class="intensity-bar"></div></div>
+             <p>Тренд: <span id="current-trend-value">--</span></p>
+             <div id="effects-list">
+                  <p>Ефекти:</p>
+                  <ul>
+                       </ul>
+             </div>
+        </div>
+
+        <div id="world-events-list" class="events-list" style="display: none;">
+             <h2>Останні Події</h2>
+             <ul>
+                 </ul>
+        </div>
+
+         <div class="mood-control">
+              <h2>Змінити Настрій Світу</h2>
+              <div class="mood-buttons">
+                   <button data-mood="ecstatic">Екстатичний</button>
+                   <button data-mood="joyful">Радісний</button>
+                   <button data-mood="peaceful">Мирний</button>
+                   <button data-mood="neutral">Нейтральний</button>
+                   <button data-mood="anxious">Тривожний</button>
+                   <button data-mood="melancholic">Меланхолійний</button>
+                   <button data-mood="sad">Сумний</button>
+                   <button data-mood="angry">Злий</button>
+                   <button data-mood="chaotic">Хаотичний</button>
+              </div>
+               <p id="update-status" style="color: #ffd700; margin-top: 10px;"></p>
+         </div>
+
+
+         <p class="error-message" id="mood-error-message" style="display: none;"></p>
+
+    </div>
+
+    <div class="tooltips-section container">
+         <h2>Контекстні Підказки</h2>
+         <div id="tooltips-list" class="tooltips-list">
+              <p class="loading">Завантаження підказок...</p>
+              <ul>
+                   </ul>
+         </div>
+          <p class="error-message" id="tooltip-error-message" style="display: none;"></p>
+    </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const moodInfoDiv = document.getElementById('world-mood-info');
+            const eventsListDiv = document.getElementById('world-events-list');
+            const eventsListUl = eventsListDiv.querySelector('ul');
+            const moodErrorMessageP = document.getElementById('mood-error-message');
+            const tooltipsListDiv = document.getElementById('tooltips-list');
+            const tooltipsListUl = tooltipsListDiv.querySelector('ul');
+            const tooltipErrorMessageP = document.getElementById('tooltip-error-message');
+            const moodButtonsDiv = document.querySelector('.mood-buttons');
+            const updateStatusP = document.getElementById('update-status');
+            const intensityBar = document.getElementById('intensity-bar');
+            const effectsListUl = document.querySelector('#effects-list ul');
+
+            // Функція для отримання даних про настрій світу
+            async function fetchWorldMood() {
+                moodInfoDiv.querySelector('.loading').style.display = 'block';
+                moodErrorMessageP.style.display = 'none';
+                 updateStatusP.textContent = ''; // Очищаємо статус оновлення
+
+                try {
+                    const response = await fetch('/api/world-mood');
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP помилка! Статус: ${response.status}`);
+                    }
+
+                    const moodData = await response.json();
+
+                    displayWorldMood(moodData);
+
+                } catch (error) {
+                    console.error('Помилка під час отримання настрою світу:', error);
+                    displayMoodError('Не вдалося завантажити дані про настрій світу. Спробуйте пізніше.');
+                } finally {
+                     moodInfoDiv.querySelector('.loading').style.display = 'none';
+                }
+            }
+
+             // Функція для відправки POST-запиту для зміни настрою світу
+            async function updateWorldMood(newMood) {
+                updateStatusP.textContent = 'Оновлення...';
+                 moodErrorMessageP.style.display = 'none';
+
+                try {
+                    const response = await fetch('/api/world-mood', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ mood: newMood }) // Відправляємо новий настрій у тілі запиту
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                         // Якщо сервер повернув помилку (наприклад, статус 400 або 500)
+                         throw new Error(result.message || `HTTP помилка! Статус: ${response.status}`);
+                    }
+
+
+                    if (result.status === 'success') {
+                        updateStatusP.textContent = 'Настрій оновлено успішно!';
+                        // Оновлюємо відображення настрою світу після успішного оновлення
+                        displayWorldMood(result.data);
+                    } else {
+                         // Якщо сервер повернув статус success, але з повідомленням про помилку в тілі (менш типово, але можливо)
+                         throw new Error(result.message || 'Помилка під час оновлення настрою.');
+                    }
+
+
+                } catch (error) {
+                    console.error('Помилка під час оновлення настрою світу:', error);
+                    updateStatusP.textContent = 'Помилка оновлення!';
+                    displayMoodError(`Помилка оновлення настрою: ${error.message}`);
+                }
+            }
+
+
+            // Функція для відображення даних про настрій світу на сторінці
+            function displayWorldMood(data) {
+                moodErrorMessageP.style.display = 'none'; // Приховуємо повідомлення про помилку настрою
+
+                const currentMoodSpan = document.getElementById('current-mood-value');
+                const currentIntensitySpan = document.getElementById('current-intensity-value');
+                const currentTrendSpan = document.getElementById('current-trend-value');
+
+
+                if (data && data.mood !== undefined) { // Перевіряємо наявність ключа mood
+
+                    // Оновлюємо текстові значення
+                    currentMoodSpan.textContent = data.mood;
+                    currentIntensitySpan.textContent = `${(data.intensity * 100).toFixed(0)}%`;
+                    currentTrendSpan.textContent = data.trend;
+
+                    // --- Візуальні індикатори ---
+                    // Колір тексту настрою
+                    currentMoodSpan.className = 'mood-value ' + data.mood; // Додаємо клас для кольору
+
+                    // Ширина смужки інтенсивності
+                    intensityBar.style.width = `${data.intensity * 100}%`;
+
+                    // Колір тексту тренду
+                    currentTrendSpan.className = 'trend-value ' + data.trend; // Додаємо клас для кольору
+
+                    // Відображаємо ефекти, якщо вони є
+                    effectsListUl.innerHTML = ''; // Очищаємо попередній список ефектів
+                    if (data.effects) {
+                         for (const [key, value] of Object.entries(data.effects)) {
+                             const formattedValue = value > 0 ? `+${value}` : value;
+                             const effectItem = document.createElement('li');
+                             effectItem.innerHTML = `<span>${key}:</span> <span>${formattedValue}</span>`;
+                             effectsListUl.appendChild(effectItem);
+                         }
+                         document.getElementById('effects-list').style.display = 'block';
+                    } else {
+                         document.getElementById('effects-list').style.display = 'none';
+                    }
+
+
+                    // Відображаємо останні події
+                    eventsListUl.innerHTML = ''; // Очищаємо попередній список подій
+                    if (data.events && data.events.length > 0) {
+                        eventsListDiv.style.display = 'block';
+                        const recentEvents = data.events.slice(-5).reverse(); // Беремо останні 5 і виводимо їх у зворотному порядку (від найновіших)
+                        recentEvents.forEach(event => {
+                            const eventTime = new Date(event.timestamp).toLocaleString('uk-UA'); // Форматуємо час для української локалі
+                            const eventItem = document.createElement('li');
+                            eventItem.textContent = `${eventTime}: ${event.name} (${event.impact})`;
+                            eventsListUl.appendChild(eventItem);
+                        });
+                    } else {
+                         eventsListDiv.style.display = 'none'; // Приховуємо список подій
+                    }
+
+                } else {
+                    displayMoodError('Отримано неповні або невірні дані про настрій світу.');
+                }
+            }
+
+            // Функція для відображення повідомлень про помилки настрою
+            function displayMoodError(message) {
+                // moodInfoDiv.innerHTML = ''; // Можливо, не потрібно повністю очищати, краще оновити статус
+                 updateStatusP.textContent = '';
+                eventsListDiv.style.display = 'none';
+                moodErrorMessageP.textContent = message;
+                moodErrorMessageP.style.display = 'block';
+            }
+
+            // --- Функція для отримання та відображення підказок ---
+             async function fetchTooltips() {
+                 tooltipsListDiv.querySelector('.loading').style.display = 'block';
+                 tooltipErrorMessageP.style.display = 'none';
+                 tooltipsListUl.innerHTML = ''; // Очищаємо попередній список підказок
+
+
+                 try {
+                     // Відправляємо GET-запит до API підказок (можна додати параметри ?context=...)
+                     const response = await fetch('/api/tooltips');
+
+                     if (!response.ok) {
+                         throw new Error(`HTTP помилка! Статус: ${response.status}`);
+                     }
+
+                     const tooltipsData = await response.json();
+
+                     displayTooltips(tooltipsData);
+
+                 } catch (error) {
+                     console.error('Помилка під час отримання підказок:', error);
+                     displayTooltipError('Не вдалося завантажити підказки. Спробуйте пізніше.');
+                 } finally {
+                     tooltipsListDiv.querySelector('.loading').style.display = 'none';
+                 }
+             }
+
+            // Функція для відображення підказок на сторінці
+            function displayTooltips(data) {
+                 tooltipErrorMessageP.style.display = 'none'; // Приховуємо повідомлення про помилку підказок
+                 tooltipsListUl.innerHTML = ''; // Очищаємо попередній список
+
+                 if (data && data.length > 0) {
+                     data.forEach(tooltip => {
+                         const tooltipItem = document.createElement('li');
+                         // Можна форматувати виведення підказки більш детально, якщо потрібно
+                         tooltipItem.textContent = `[${tooltip.character_type}] (${tooltip.context}) ${tooltip.text}`;
+                         tooltipsListUl.appendChild(tooltipItem);
+                     });
+                 } else {
+                     const noTooltipsItem = document.createElement('li');
+                     noTooltipsItem.textContent = 'Підказки відсутні або не знайдено.';
+                     tooltipsListUl.appendChild(noTooltipsItem);
+                 }
+            }
+
+             // Функція для відображення повідомлень про помилки підказок
+            function displayTooltipError(message) {
+                 tooltipsListUl.innerHTML = ''; // Очищаємо список підказок
+                 const errorItem = document.createElement('li');
+                 errorItem.textContent = `Помилка: ${message}`;
+                 errorItem.style.color = '#ff0000';
+                 tooltipsListUl.appendChild(errorItem);
+
+                // Або просто відображаємо в окремому параграфі помилок:
+                 // tooltipErrorMessageP.textContent = message;
+                 // tooltipErrorMessageP.style.display = 'block';
+            }
+
+
+            // --- Обробники подій ---
+
+            // Обробник натискання на кнопки зміни настрою
+            moodButtonsDiv.addEventListener('click', function(event) {
+                // Перевіряємо, чи був клік саме по кнопці
+                if (event.target.tagName === 'BUTTON') {
+                    const newMood = event.target.getAttribute('data-mood');
+                    if (newMood) {
+                        updateWorldMood(newMood); // Викликаємо функцію оновлення настрою
+                    }
+                }
+            });
+
+
+            // --- Ініціалізація: Завантажуємо дані при завантаженні сторінки ---
+            fetchWorldMood(); // Завантажуємо дані про настрій світу
+            fetchTooltips(); // Завантажуємо підказки
+
+            // Оновлюємо дані про настрій світу кожні 30 секунд (опціонально)
+            // setInterval(fetchWorldMood, 30000);
+
+            // Оновлюємо підказки кожні 60 секунд (опціонально)
+            // setInterval(fetchTooltips, 60000);
+        });
+    </script>
+
+</body>
+</html>

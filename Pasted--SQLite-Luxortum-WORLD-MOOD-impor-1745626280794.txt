@@ -1,0 +1,211 @@
+"""
+Фрагмент коду для інтеграції SQLite у проєкт Luxortum
+для зберігання стану WORLD_MOOD.
+"""
+import sqlite3
+import json
+import time
+import os
+from flask import Flask, request, jsonify, g # Додаємо імпорт g для зберігання з'єднання з БД
+
+# ... (інші імпорти та конфігурація Flask додатка) ...
+# app = Flask(__name__)
+# app.secret_key = os.environ.get("SESSION_SECRET", "luxortum_secret_key")
+# ... (визначення TOOLTIPS та інших статичних даних) ...
+
+# --- Конфігурація Бази Даних ---
+DATABASE = 'luxortum_world.db' # Ім'я файлу бази даних SQLite
+
+def get_db():
+    """
+    Встановлює з'єднання з базою даних, якщо його ще немає,
+    і зберігає його у спеціальному об'єкті g Flask.
+    """
+    if 'db' not in g:
+        g.db = sqlite3.connect(
+            DATABASE,
+            detect_types=sqlite3.PARSE_DECLTYPES
+        )
+        g.db.row_factory = sqlite3.Row # Дозволяє отримувати результати як словники
+    return g.db
+
+def close_db(e=None):
+    """
+    Закриває з'єднання з базою даних, якщо воно існує.
+    Викликається автоматично після кожного запиту.
+    """
+    db = g.pop('db', None) # Отримуємо з'єднання з g, якщо воно там є
+
+    if db is not None:
+        db.close()
+
+def init_db():
+    """
+    Ініціалізує базу даних: створює таблицю для WORLD_MOOD, якщо вона не існує.
+    """
+    db = get_db()
+    with app.open_resource('schema.sql', mode='r') as f:
+        db.cursor().executescript(f.read())
+    db.commit()
+
+# --- Реєстрація функцій БД у додатку Flask ---
+# Ці функції будуть викликатися автоматично Flask
+app.teardown_appcontext(close_db) # Закривати з'єднання після запиту
+
+# --- Функція для ініціалізації БД при першому запуску ---
+@app.cli.command('init-db') # Додає команду 'flask init-db'
+def init_db_command():
+    """Очищає існуючі дані та створює нові таблиці."""
+    init_db()
+    print('Ініціалізовано базу даних.')
+
+# --- Функція для отримання стану світу з БД ---
+def get_world_mood_from_db():
+    """
+    Отримує поточний стан WORLD_MOOD з бази даних.
+    Якщо запис не знайдено, повертає початковий стан.
+    """
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM world_mood LIMIT 1")
+    row = cursor.fetchone()
+
+    if row:
+        # Десеріалізуємо JSON-рядок назад у словник
+        try:
+            mood_data = json.loads(row['state_data'])
+            # Перевіряємо, чи всі необхідні ключі присутні, інакше повертаємо початковий стан
+            if all(key in mood_data for key in ['mood', 'intensity', 'timestamp', 'events', 'trend', 'effects']):
+                 return mood_data
+            else:
+                 print("Попередження: Дані в БД неповні, повертаємо початковий стан.")
+                 return get_initial_world_mood() # Повертаємо початковий стан, якщо дані в БД неповні
+        except json.JSONDecodeError:
+            print("Попередження: Невірний формат JSON у базі даних, повертаємо початковий стан.")
+            return get_initial_world_mood() # Повертаємо початковий стан, якщо JSON невірний
+    else:
+        # Якщо запис не знайдено, ініціалізуємо його в БД і повертаємо початковий стан
+        initial_mood = get_initial_world_mood()
+        save_world_mood_to_db(initial_mood)
+        return initial_mood
+
+# --- Функція для збереження стану світу в БД ---
+def save_world_mood_to_db(mood_data):
+    """
+    Зберігає поточний стан WORLD_MOOD у базі даних.
+    """
+    db = get_db()
+    cursor = db.cursor()
+    # Серіалізуємо словник стану світу у JSON-рядок для зберігання
+    state_data_json = json.dumps(mood_data)
+
+    # Видаляємо старий запис (якщо є) і вставляємо новий
+    # Це простий підхід для зберігання одного стану світу
+    cursor.execute("DELETE FROM world_mood")
+    cursor.execute("INSERT INTO world_mood (state_data) VALUES (?)", (state_data_json,))
+    db.commit()
+
+# --- Початковий стан світу (якщо БД порожня або дані невірні) ---
+def get_initial_world_mood():
+     """Повертає початковий стан WORLD_MOOD."""
+     return {
+        "mood": "peaceful",
+        "intensity": 0.6,
+        "timestamp": int(time.time() * 1000),
+        "events": [
+            {
+                "name": "Ініціалізація світу",
+                "impact": "neutral",
+                "timestamp": int(time.time() * 1000)
+            }
+        ],
+        "trend": "stable",
+        "effects": {
+            "growth": 0.2,
+            "creativity": 0.1,
+            "harmony": 0.5,
+            "chaos": -0.4
+        }
+    }
+
+
+# --- Модифікований маршрут /api/world-mood ---
+@app.route('/api/world-mood', methods=['GET', 'POST'])
+def handle_world_mood_with_db(): # Змінено назву функції
+    """
+    API маршрут для отримання (GET) та оновлення (POST) настрою світу,
+    використовуючи базу даних для зберігання стану.
+    """
+    # Отримуємо поточний стан світу з бази даних
+    current_mood = get_world_mood_from_db()
+
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+
+            if data is None:
+                 return jsonify({"status": "error", "message": "Невірний формат JSON"}), 400
+
+            # Оновлюємо дані, базуючись на поточному стані з БД
+            updated_mood = current_mood.copy() # Робимо копію, щоб не змінювати стан безпосередньо під час обробки
+
+            if 'mood' in data and isinstance(data['mood'], str):
+                updated_mood['mood'] = data['mood']
+
+            if 'intensity' in data and isinstance(data['intensity'], (int, float)):
+                updated_mood['intensity'] = max(0.0, min(1.0, float(data['intensity'])))
+
+            if 'events' in data and isinstance(data['events'], list):
+                for event in data['events']:
+                    if isinstance(event, dict) and 'name' in event and 'impact' in event:
+                        valid_impacts = ['positive', 'negative', 'neutral']
+                        if event['impact'] in valid_impacts:
+                            event['timestamp'] = event.get('timestamp', int(time.time() * 1000))
+                            updated_mood['events'].append(event)
+                        else:
+                             print(f"Помилка: Невірне значення impact для події: {event.get('name')}")
+                    else:
+                        print(f"Помилка: Невірний формат події: {event}")
+
+            # Перераховуємо тренд та ефекти на основі оновлених даних
+            updated_mood['trend'] = calculate_trend(updated_mood['events'])
+            updated_mood['effects'] = calculate_effects(updated_mood['mood'])
+
+            # Оновлюємо часову мітку
+            updated_mood['timestamp'] = int(time.time() * 1000)
+
+            # Зберігаємо оновлений стан світу в базі даних
+            save_world_mood_to_db(updated_mood)
+
+            return jsonify({"status": "success", "data": updated_mood})
+
+        except json.JSONDecodeError:
+             return jsonify({"status": "error", "message": "Невірний формат JSON у тілі запиту"}), 400
+        except Exception as e:
+            return jsonify({"status": "error", "message": f"Внутрішня помилка сервера: {str(e)}"}), 500
+
+    else: # Обробка GET-запиту
+        # Повертаємо поточний стан світу, отриманий з бази даних
+        return jsonify(current_mood)
+
+# --- Допоміжні функції calculate_trend та calculate_effects залишаються без змін ---
+# (Вставте їх сюди з попередньої версії коду)
+# def calculate_trend(events): ...
+# def calculate_effects(mood): ...
+
+# --- Інші маршрути (/api/tooltips, /health, /static/, перенаправлення) залишаються без змін ---
+# (Вставте їх сюди з попередньої версії коду)
+# @app.route('/api/tooltips')...
+# @app.route('/health')...
+# @app.route('/static/<path:path>')...
+# @app.route('/tooltip-demo.html')...
+# @app.route('/world-mood-demo.html')...
+# @app.route('/hello')...
+
+
+# --- Блок запуску додатка залишається без змін ---
+# if __name__ == '__main__':
+#     port = int(os.environ.get('PORT', 5000))
+#     print(f"Запуск Flask додатка на http://0.0.0.0:{port}")
+#     app.run(host='0.0.0.0', port=port, debug=True)
+

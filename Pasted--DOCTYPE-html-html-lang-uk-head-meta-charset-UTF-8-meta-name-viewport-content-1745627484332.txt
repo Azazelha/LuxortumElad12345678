@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxortum - Настрій Світу</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1a0a2a; /* Темний фон, схожий на небо з Вашого зображення */
+            color: #ffffff; /* Білий текст */
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+        .container {
+            background-color: #4a2a8a; /* Пурпуровий відтінок для контейнера */
+            padding: 30px;
+            border-radius: 15px; /* Округлі кути */
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Тінь */
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #ffbb00; /* Золотистий колір для заголовка */
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .mood-info p {
+            font-size: 1.1em;
+            margin: 10px 0;
+        }
+
+        .mood-info span {
+            font-weight: bold;
+            color: #ffd700; /* Золотистий для ключових значень */
+        }
+
+        .events-list {
+            margin-top: 20px;
+            border-top: 1px solid #6a4a9a; /* Лінія розділення */
+            padding-top: 15px;
+            text-align: left;
+        }
+
+        .events-list h2 {
+            color: #ff8c00; /* Помаранчевий для заголовка подій */
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .events-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .events-list li {
+            background-color: #6a4a9a; /* Темніший пурпуровий для елементів списку */
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            opacity: 0.9;
+        }
+
+        .error-message {
+            color: #ff0000; /* Червоний для повідомлень про помилки */
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .loading {
+            font-style: italic;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Поточний Настрій Світу Luxortum</h1>
+
+        <div id="world-mood-info" class="mood-info">
+            <p class="loading">Завантаження даних про настрій світу...</p>
+            </div>
+
+        <div id="world-events-list" class="events-list" style="display: none;">
+             <h2>Останні Події</h2>
+             <ul>
+                 </ul>
+        </div>
+
+         <p class="error-message" id="error-message" style="display: none;"></p>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const moodInfoDiv = document.getElementById('world-mood-info');
+            const eventsListDiv = document.getElementById('world-events-list');
+            const eventsListUl = eventsListDiv.querySelector('ul');
+            const errorMessageP = document.getElementById('error-message');
+
+            // Функція для отримання даних про настрій світу
+            async function fetchWorldMood() {
+                try {
+                    // Відправляємо GET-запит до нашого API
+                    const response = await fetch('/api/world-mood');
+
+                    // Перевіряємо, чи запит був успішним
+                    if (!response.ok) {
+                        throw new Error(`HTTP помилка! Статус: ${response.status}`);
+                    }
+
+                    // Парсимо відповідь як JSON
+                    const moodData = await response.json();
+
+                    // Відображаємо дані на сторінці
+                    displayWorldMood(moodData);
+
+                } catch (error) {
+                    // Обробка помилок
+                    console.error('Помилка під час отримання настрою світу:', error);
+                    displayError('Не вдалося завантажити дані про настрій світу. Спробуйте пізніше.');
+                }
+            }
+
+            // Функція для відображення даних про настрій світу на сторінці
+            function displayWorldMood(data) {
+                // Очищаємо попередній вміст
+                moodInfoDiv.innerHTML = '';
+                eventsListUl.innerHTML = '';
+                errorMessageP.style.display = 'none'; // Приховуємо повідомлення про помилку
+
+                if (data && data.mood) {
+                    moodInfoDiv.innerHTML = `
+                        <p>Настрій: <span>${data.mood}</span></p>
+                        <p>Інтенсивність: <span>${(data.intensity * 100).toFixed(0)}%</span></p>
+                        <p>Тренд: <span>${data.trend}</span></p>
+                    `;
+
+                    // Відображаємо ефекти, якщо вони є
+                    if (data.effects) {
+                         let effectsHtml = '<p>Ефекти:</p><ul>';
+                         for (const [key, value] of Object.entries(data.effects)) {
+                             // Форматуємо значення ефектів
+                             const formattedValue = value > 0 ? `+${value}` : value;
+                             effectsHtml += `<li>${key}: <span>${formattedValue}</span></li>`;
+                         }
+                         effectsHtml += '</ul>';
+                         moodInfoDiv.innerHTML += effectsHtml;
+                    }
+
+
+                    // Відображаємо останні події, якщо вони є
+                    if (data.events && data.events.length > 0) {
+                        eventsListDiv.style.display = 'block';
+                        // Відображаємо останні кілька подій (наприклад, 5)
+                        const recentEvents = data.events.slice(-5); // Беремо останні 5
+                        recentEvents.forEach(event => {
+                            const eventTime = new Date(event.timestamp).toLocaleString(); // Форматуємо час
+                            const eventItem = document.createElement('li');
+                            eventItem.textContent = `${eventTime}: ${event.name} (${event.impact})`;
+                            eventsListUl.appendChild(eventItem);
+                        });
+                    } else {
+                         eventsListDiv.style.display = 'none'; // Приховуємо список подій, якщо їх немає
+                    }
+
+
+                } else {
+                    // Якщо дані неповні або відсутні
+                    displayError('Отримано неповні або невірні дані про настрій світу.');
+                }
+            }
+
+            // Функція для відображення повідомлень про помилки
+            function displayError(message) {
+                moodInfoDiv.innerHTML = ''; // Очищаємо вміст про настрій
+                eventsListDiv.style.display = 'none'; // Приховуємо список подій
+                errorMessageP.textContent = message;
+                errorMessageP.style.display = 'block';
+            }
+
+            // Завантажуємо дані про настрій світу при завантаженні сторінки
+            fetchWorldMood();
+
+            // Оновлюємо дані про настрій світу кожні 30 секунд (приклад)
+            // setInterval(fetchWorldMood, 30000); // Розкоментуйте для автоматичного оновлення
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,117 @@
+"""
+Фрагмент коду для додавання базової логіки симуляції
+до проєкту Luxortum.
+"""
+# ... (існуючі імпорти: sqlite3, json, time, os, Flask, request, jsonify, redirect, g) ...
+import random # Додаємо імпорт для генерації випадкових подій
+
+# ... (існуюча конфігурація Flask додатка, TOOLTIPS, DATABASE, get_db, close_db, init_db, init_db_command) ...
+
+# --- Функції для роботи з базою даних (залишаються без змін) ---
+# def get_world_mood_from_db(): ...
+# def save_world_mood_to_db(mood_data): ...
+# def get_initial_world_mood(): ...
+
+# --- Допоміжні функції для розрахунку тренду та ефектів (залишаються без змін) ---
+# def calculate_trend(events): ...
+# def calculate_effects(mood): ...
+
+# --- Логіка Симуляції ---
+
+# Визначення можливих типів подій та їх потенційного впливу
+# У реальній симуляції це може бути набагато складніше
+EVENT_TYPES = [
+    {"name": "Божественне втручання", "impact": "positive", "description": "Світ отримав благословення."},
+    {"name": "Прояв хаосу", "impact": "negative", "description": "Силами хаосу посіяно розбрат."},
+    {"name": "Гармонійне вирівнювання", "impact": "neutral", "description": "Енергії світу збалансовано."},
+    {"name": "Спалах творчості", "impact": "positive", "description": "Натхнення охопило світ."},
+    {"name": "Занепад енергії", "impact": "negative", "description": "Життєва сила світу зменшується."},
+]
+
+def generate_random_event():
+    """
+    Генерує випадкову подію зі списку EVENT_TYPES.
+    """
+    event_type = random.choice(EVENT_TYPES)
+    event = {
+        "name": event_type["name"],
+        "impact": event_type["impact"],
+        "timestamp": int(time.time() * 1000),
+        "description": event_type["description"] # Додаємо опис події
+    }
+    return event
+
+def apply_event_to_world(current_mood_data, event):
+    """
+    Застосовує вплив події до стану світу.
+    Ця функція є спрощеною і просто додає подію до списку.
+    У більш складній симуляції тут може бути логіка зміни настрою, ефектів тощо.
+    """
+    # Додаємо нову подію до списку подій
+    # Обмежуємо розмір списку подій, щоб уникнути надмірного зростання
+    MAX_EVENTS = 20 # Максимальна кількість подій для зберігання
+    current_mood_data['events'].append(event)
+    if len(current_mood_data['events']) > MAX_EVENTS:
+        current_mood_data['events'] = current_mood_data['events'][-MAX_EVENTS:] # Залишаємо тільки останні події
+
+    # У більш складній симуляції тут може бути логіка зміни настрою, інтенсивності, ефектів
+    # на основі типу події та поточного стану світу.
+    # Наприклад:
+    # if event['impact'] == 'positive':
+    #     current_mood_data['intensity'] = min(1.0, current_mood_data['intensity'] + 0.1)
+    # elif event['impact'] == 'negative':
+    #     current_mood_data['intensity'] = max(0.0, current_mood_data['intensity'] - 0.1)
+    #
+    # Також можна змінювати сам 'mood' на основі сукупного впливу подій.
+
+    # Перераховуємо тренд та ефекти після додавання події
+    current_mood_data['trend'] = calculate_trend(current_mood_data['events'])
+    current_mood_data['effects'] = calculate_effects(current_mood_data['mood']) # Ефекти залежать від поточного настрою
+
+    current_mood_data['timestamp'] = int(time.time() * 1000) # Оновлюємо часову мітку останньої зміни
+
+    return current_mood_data
+
+
+# --- Новий маршрут для запуску симуляції (для демонстрації) ---
+@app.route('/api/simulate', methods=['POST'])
+def run_simulation_step():
+    """
+    Запускає один крок симуляції: генерує випадкову подію
+    та застосовує її до стану світу в базі даних.
+    """
+    try:
+        # Отримуємо поточний стан світу з БД
+        current_mood_data = get_world_mood_from_db()
+
+        # Генеруємо нову подію
+        new_event = generate_random_event()
+        print(f"Згенеровано подію: {new_event['name']} ({new_event['impact']})") # Логуємо подію
+
+        # Застосовуємо подію до стану світу
+        updated_mood_data = apply_event_to_world(current_mood_data, new_event)
+
+        # Зберігаємо оновлений стан світу в БД
+        save_world_mood_to_db(updated_mood_data)
+
+        # Повертаємо оновлений стан світу
+        return jsonify({"status": "success", "message": "Крок симуляції виконано", "data": updated_mood_data})
+
+    except Exception as e:
+        print(f"Помилка під час виконання кроку симуляції: {str(e)}")
+        return jsonify({"status": "error", "message": f"Помилка симуляції: {str(e)}"}), 500
+
+
+# --- Модифікований маршрут /api/world-mood (залишається без змін, він тільки отримує/оновлює стан, але не запускає симуляцію) ---
+# @app.route('/api/world-mood', methods=['GET', 'POST'])
+# def handle_world_mood_with_db(): ...
+
+# --- Інші маршрути (/api/tooltips, /health, /static/, перенаправлення, /hello) залишаються без змін ---
+# ...
+
+# --- Блок запуску додатка залишається без змін ---
+# if __name__ == '__main__':
+#     port = int(os.environ.get('PORT', 5000))
+#     print(f"Запуск Flask додатка на http://0.0.0.0:{port}")
+#     app.run(host='0.0.0.0', port=port, debug=True)
+

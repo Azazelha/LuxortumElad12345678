@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxortum - Панель Управління Світом</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; /* Приховуємо скролбар, оскільки 3D сцена на весь екран */
+            font-family: 'Arial', sans-serif;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            flex-direction: column;
+            gap: 20px;
+            position: relative; /* Для позиціонування контейнерів поверх 3D */
+            padding: 20px; /* Додаємо відступи, щоб контейнери не прилипали до країв */
+            box-sizing: border-box;
+        }
+
+        /* Стилі для канвасу Three.js */
+        canvas {
+             display: block;
+             position: fixed; /* Фіксуємо канвас на задньому плані */
+             top: 0;
+             left: 0;
+             z-index: -1; /* Розміщуємо під іншими елементами */
+        }
+
+        .container {
+            background-color: rgba(74, 42, 138, 0.8); /* Пурпуровий з прозорістю */
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            width: 100%; /* Використовуємо всю доступну ширину контейнера body */
+            box-sizing: border-box; /* Враховуємо padding у розмірі */
+            position: relative; /* Щоб z-index працював */
+            z-index: 1; /* Розміщуємо поверх 3D сцени */
+             backdrop-filter: blur(5px); /* Ефект розмиття фону за контейнером */
+             -webkit-backdrop-filter: blur(5px); /* Для підтримки Safari */
+             margin-left: auto; /* Центруємо контейнери */
+             margin-right: auto;
+        }
+
+        h1, h2 {
+            color: #ffbb00;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .mood-info p {
+            font-size: 1.1em;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .mood-info span {
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+         /* --- Візуальні індикатори для настрою та тренду --- */
+        .mood-value {
+             font-weight: bold;
+             transition: color 0.5s ease; /* Анімація зміни кольору тексту */
+        }
+        .mood-value.ecstatic { color: #ffff00; }
+        .mood-value.joyful { color: #00ff00; }
+        .mood-value.peaceful { color: #00ffff; }
+        .mood-value.neutral { color: #cccccc; }
+        .mood-value.anxious { color: #ff8c00; }
+        .mood-value.melancholic { color: #8a2be2; }
+        .mood-value.sad { color: #0000ff; }
+        .mood-value.angry { color: #ff0000; }
+        .mood-value.chaotic { color: #ff00ff; }
+
+
+        .trend-value {
+             font-weight: bold;
+             transition: color 0.5s ease; /* Анімація зміни кольору тексту */
+        }
+        .trend-value.improving { color: #00ff00; }
+        .trend-value.worsening { color: #ff0000; }
+        .trend-value.stable { color: #cccccc; }
+
+
+        /* --- Візуальний індикатор інтенсивності (проста смужка) --- */
+        .intensity-bar-container {
+            width: 100%;
+            background-color: #6a4a9a;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .intensity-bar {
+            height: 15px;
+            background-color: #ffd700;
+            width: 0%;
+            border-radius: 5px;
+             transition: width 0.5s ease-in-out; /* Плавний перехід при зміні ширини */
+        }
+
+
+        .effects-list ul {
+             list-style: none;
+             padding: 0;
+             margin-top: 5px;
+        }
+
+        .effects-list li {
+            background-color: rgba(106, 74, 154, 0.9); /* Темніший пурпуровий з прозорістю */
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+             display: flex;
+             justify-content: space-between;
+             font-size: 0.9em;
+             opacity: 0; /* Початкова прозорість для анімації появи */
+             transform: translateY(10px); /* Початкове зміщення для анімації появи */
+             animation: fadeInSlideUp 0.5s ease forwards; /* Анімація появи */
+        }
+
+        /* Анімація появи елементів списку ефектів з невеликою затримкою */
+        @keyframes fadeInSlideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Додаємо затримку для кожного елемента списку ефектів за допомогою JavaScript */
+
+
+        .events-list {
+            margin-top: 20px;
+            border-top: 1px solid #6a4a9a;
+            padding-top: 15px;
+            text-align: left;
+        }
+
+        .events-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .events-list li {
+            background-color: rgba(106, 74, 154, 0.9); /* Темніший пурпуровий з прозорістю */
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+             font-size: 0.9em;
+             opacity: 0; /* Початкова прозорість для анімації появи */
+             transform: translateY(10px); /* Початкове зміщення для анімації появи */
+             animation: fadeInSlideUp 0.5s ease forwards; /* Анімація появи */
+        }
+         /* Додаємо затримку для кожного елемента списку подій за допомогою JavaScript */
+
+         .event-description {
+             font-style: italic;
+             margin-top: 5px;
+             font-size: 0.8em;
+             color: #cccccc;
+         }
+
+
+        /* --- Секція керування настроєм --- */
+        .mood-control {
+             margin-top: 20px;
+             border-top: 1px solid #6a4a9a;
+             padding-top: 15px;
+             text-align: center;
+        }
+
+        .mood-control h2 {
+             margin-bottom: 10px;
+        }
+
+        .mood-buttons button {
+             background-color: #ffbb00;
+             color: #1a0a2a;
+             border: none;
+             padding: 10px 15px;
+             margin: 5px;
+             border-radius: 5px;
+             cursor: pointer;
+             font-size: 1em;
+             transition: background-color 0.3s ease, transform 0.1s ease; /* Анімація при наведенні та натисканні */
+        }
+
+        .mood-buttons button:hover {
+             background-color: #ffd700;
+             transform: translateY(-2px); /* Невелике підняття при наведенні */
+        }
+
+         .mood-buttons button:active {
+             background-color: #ccaa00;
+             transform: translateY(0); /* Повернення на місце при натисканні */
+         }
+
+        /* --- Кнопка симуляції --- */
+        .simulation-control {
+             margin-top: 20px;
+             text-align: center;
+        }
+
+         .simulation-control button {
+             background-color: #00ffff; /* Блакитний колір */
+             color: #1a0a2a;
+             border: none;
+             padding: 12px 20px;
+             border-radius: 8px;
+             cursor: pointer;
+             font-size: 1.1em;
+             font-weight: bold;
+             transition: background-color 0.3s ease, transform 0.1s ease;
+         }
+
+         .simulation-control button:hover {
+             background-color: #00cccc;
+             transform: translateY(-2px);
+         }
+
+         .simulation-control button:active {
+             background-color: #009999;
+             transform: translateY(0);
+         }
+
+
+        /* --- Секція підказок --- */
+        .tooltips-section {
+             background-color: rgba(74, 42, 138, 0.8); /* Пурпуровий з прозорістю */
+             padding: 30px;
+             border-radius: 15px;
+             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+             max-width: 600px;
+             width: 100%;
+             box-sizing: border-box;
+             position: relative;
+             z-index: 1;
+              backdrop-filter: blur(5px);
+             -webkit-backdrop-filter: blur(5px);
+             margin-left: auto;
+             margin-right: auto;
+        }
+
+        .tooltips-list ul {
+             list-style: none;
+             padding: 0;
+        }
+
+        .tooltips-list li {
+             background-color: rgba(106, 74, 154, 0.9); /* Темніший пурпуровий з прозорістю */
+             padding: 10px;
+             margin-bottom: 8px;
+             border-radius: 8px;
+             font-size: 0.9em;
+             opacity: 0; /* Початкова прозорість для анімації появи */
+             transform: translateY(10px); /* Початкове зміщення для анімації появи */
+             animation: fadeInSlideUp 0.5s ease forwards; /* Анімація появи */
+        }
+        /* Додаємо затримку для кожного елемента списку підказок за допомогою JavaScript */
+
+
+        .error-message {
+            color: #ff0000;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .loading {
+            font-style: italic;
+            opacity: 0.7;
+            text-align: center;
+        }
+
+        /* Стилі для заголовка сцени */
+        #scene-title {
+            position: fixed; /* Фіксуємо на екрані */
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-family: sans-serif;
+            z-index: 10; /* Розміщуємо поверх усього */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Навігаційна панель */
+        .nav-bar {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-button {
+            background-color: #ffbb00;
+            color: #1a0a2a;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .nav-button:hover {
+            background-color: #ffd700;
+            transform: translateY(-2px);
+        }
+
+        .nav-button:active {
+            background-color: #ccaa00;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="scene-title">Luxortum - 3D Панель керування</div>
+
+    <div class="nav-bar">
+        <a href="/" class="nav-button">Головна</a>
+        <a href="/static/world-control-panel.html" class="nav-button">Звичайна панель</a>
+        <a href="/static/3d-scene-demo.html" class="nav-button">3D Сцена</a>
+    </div>
+
+    <div class="container">
+        <h1>Панель Управління Настроєм Світу Luxortum</h1>
+
+        <div id="world-mood-info" class="mood-info">
+            <p class="loading">Завантаження даних про настрій світу...</p>
+             <p>Настрій: <span id="current-mood-value">--</span></p>
+             <p>Інтенсивність: <span id="current-intensity-value">--</span></p>
+              <div class="intensity-bar-container"><div id="intensity-bar" class="intensity-bar"></div></div>
+             <p>Тренд: <span id="current-trend-value">--</span></p>
+             <div id="effects-list">
+                  <p>Ефекти:</p>
+                  <ul>
+                       </ul>
+             </div>
+        </div>
+
+        <div id="world-events-list" class="events-list" style="display: none;">
+             <h2>Останні Події</h2>
+             <ul>
+                 </ul>
+        </div>
+
+         <div class="mood-control">
+              <h2>Змінити Настрій Світу</h2>
+              <div class="mood-buttons">
+                   <button data-mood="positive">Позитивний</button>
+                   <button data-mood="negative">Негативний</button>
+                   <button data-mood="anxious">Тривожний</button>
+                   <button data-mood="melancholic">Меланхолійний</button>
+                   <button data-mood="chaotic">Хаотичний</button>
+              </div>
+         </div>
+
+         <div class="simulation-control">
+              <button id="run-simulation-btn">Запустити Симуляцію</button>
+              <div id="simulation-result" style="margin-top: 10px; display: none;"></div>
+         </div>
+    </div>
+
+    <script>
+        // Налаштування Three.js сцени
+        let scene, camera, renderer, controls;
+        let moodSphere;
+        let particles = [];
+        let particleSystem;
+
+        // Змінні для ефектів
+        let rotationSpeed = 0.005;
+        let pulseSpeed = 0.02;
+        let pulseMagnitude = 0.1;
+        let pulsePhase = 0;
+
+        // Кольори для різних настроїв
+        const moodColors = {
+            positive: 0x00ff00, // Зелений
+            negative: 0xff0000, // Червоний
+            anxious: 0xff8c00, // Помаранчевий
+            melancholic: 0x8a2be2, // Фіолетовий
+            chaotic: 0xff00ff // Рожевий
+        };
+
+        // Поточний стан настрою (буде оновлюватися з API)
+        let currentMoodState = {
+            mood: "balanced",
+            intensity: 50
+        };
+
+        // Ініціалізація 3D сцени
+        function initScene() {
+            // Створюємо сцену
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a0a2a); // Темно-фіолетовий фон
+
+            // Налаштовуємо камеру
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 5;
+
+            // Створюємо рендерер
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.insertBefore(renderer.domElement, document.body.firstChild);
+
+            // Додаємо OrbitControls для управління камерою
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Додаємо освітлення
+            const ambientLight = new THREE.AmbientLight(0xcccccc, 0.5);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+
+            // Створюємо центральну сферу настрою
+            const sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
+            const sphereMaterial = new THREE.MeshStandardMaterial({
+                color: 0xcccccc,
+                emissive: 0x222222,
+                roughness: 0.7,
+                metalness: 0.3,
+            });
+            moodSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            scene.add(moodSphere);
+
+            // Створюємо систему частинок навколо сфери
+            createParticleSystem();
+
+            // Додаємо івент-лістенер для зміни розміру
+            window.addEventListener('resize', onWindowResize, false);
+
+            // Запускаємо анімаційний цикл
+            animate();
+        }
+
+        // Функція для створення системи частинок
+        function createParticleSystem() {
+            const particlesCount = 500;
+            const positions = new Float32Array(particlesCount * 3);
+            const colors = new Float32Array(particlesCount * 3);
+            const sizes = new Float32Array(particlesCount);
+
+            const color = new THREE.Color();
+            
+            for (let i = 0; i < particlesCount; i++) {
+                // Випадкова позиція частинки навколо сфери (між 1.2 і 3.5 від центру)
+                const radius = 1.2 + Math.random() * 2.3;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.random() * Math.PI;
+
+                const x = radius * Math.sin(phi) * Math.cos(theta);
+                const y = radius * Math.sin(phi) * Math.sin(theta);
+                const z = radius * Math.cos(phi);
+
+                positions[i * 3] = x;
+                positions[i * 3 + 1] = y;
+                positions[i * 3 + 2] = z;
+
+                // Випадковий колір частинки (більш яскравий)
+                color.setHSL(Math.random(), 0.9, 0.7);
+                colors[i * 3] = color.r;
+                colors[i * 3 + 1] = color.g;
+                colors[i * 3 + 2] = color.b;
+
+                // Випадковий розмір частинки
+                sizes[i] = 0.05 + Math.random() * 0.05;
+
+                // Зберігаємо дані про частинку для анімації
+                particles.push({
+                    basePosition: { x, y, z },
+                    speed: 0.005 + Math.random() * 0.01,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+            const particleMaterial = new THREE.PointsMaterial({
+                size: 0.1,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            particleSystem = new THREE.Points(geometry, particleMaterial);
+            scene.add(particleSystem);
+        }
+
+        // Функція адаптації до зміни розміру вікна
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Функція анімації
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Обертання сфери
+            moodSphere.rotation.y += rotationSpeed;
+            moodSphere.rotation.x += rotationSpeed * 0.5;
+
+            // Пульсація сфери відповідно до інтенсивності
+            pulsePhase += pulseSpeed;
+            const scaleFactor = 1 + Math.sin(pulsePhase) * pulseMagnitude * (currentMoodState.intensity / 100);
+            moodSphere.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
+            // Анімація частинок
+            animateParticles();
+
+            // Оновлення контролів камери
+            controls.update();
+
+            // Рендеринг сцени
+            renderer.render(scene, camera);
+        }
+
+        // Функція анімації частинок
+        function animateParticles() {
+            if (!particleSystem) return;
+
+            const positions = particleSystem.geometry.attributes.position.array;
+            const colors = particleSystem.geometry.attributes.color.array;
+
+            for (let i = 0; i < particles.length; i++) {
+                const particle = particles[i];
+                
+                // Плавний рух частинок по орбіті
+                particle.phase += particle.speed;
+                
+                // Додаткова амплітуда руху в залежності від інтенсивності настрою
+                const amplitude = 0.1 + (currentMoodState.intensity / 100) * 0.3;
+                
+                // Рух по всіх трьох осях
+                positions[i * 3] = particle.basePosition.x + Math.sin(particle.phase) * amplitude;
+                positions[i * 3 + 1] = particle.basePosition.y + Math.cos(particle.phase) * amplitude;
+                positions[i * 3 + 2] = particle.basePosition.z + Math.sin(particle.phase * 0.5) * amplitude;
+
+                // Зміна кольору в залежності від настрою
+                if (currentMoodState.mood !== "balanced") {
+                    const moodColor = new THREE.Color(moodColors[currentMoodState.mood] || 0xcccccc);
+                    colors[i * 3] = (colors[i * 3] * 0.95) + (moodColor.r * 0.05);
+                    colors[i * 3 + 1] = (colors[i * 3 + 1] * 0.95) + (moodColor.g * 0.05);
+                    colors[i * 3 + 2] = (colors[i * 3 + 2] * 0.95) + (moodColor.b * 0.05);
+                }
+            }
+
+            particleSystem.geometry.attributes.position.needsUpdate = true;
+            particleSystem.geometry.attributes.color.needsUpdate = true;
+        }
+
+        // Функція для оновлення візуалізації сфери відповідно до настрою
+        function updateMoodSphere(mood, intensity) {
+            // Зберігаємо поточний стан
+            currentMoodState.mood = mood;
+            currentMoodState.intensity = intensity;
+
+            // Зміна кольору та інтенсивності світіння
+            const moodColor = moodColors[mood] || 0xcccccc;
+            moodSphere.material.color.setHex(moodColor);
+            
+            // Налаштовуємо ефекти анімації відповідно до інтенсивності
+            rotationSpeed = 0.002 + (intensity / 100) * 0.006;
+            pulseSpeed = 0.01 + (intensity / 100) * 0.02;
+            pulseMagnitude = 0.05 + (intensity / 100) * 0.15;
+            
+            // Налаштовуємо матеріал сфери
+            moodSphere.material.emissiveIntensity = intensity / 100;
+            moodSphere.material.emissive.setHex(moodColor);
+        }
+
+        // API функції для Luxortum World Mood
+        function fetchWorldMoodData() {
+            fetch('/api/world-mood')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Помилка завантаження даних про настрій світу');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Оновлюємо інформацію про настрій
+                    document.querySelector('.loading').style.display = 'none';
+                    
+                    // Оновлюємо текстову інформацію
+                    updateWorldMoodDisplay(data);
+                    
+                    // Оновлюємо 3D візуалізацію
+                    updateMoodSphere(data.mood, data.intensity);
+                    
+                    // Показуємо список подій
+                    loadWorldEvents();
+                })
+                .catch(error => {
+                    console.error('Помилка:', error);
+                    document.querySelector('.loading').textContent = 'Помилка завантаження даних: ' + error.message;
+                });
+        }
+
+        function loadWorldEvents() {
+            fetch('/api/world-events')
+                .then(response => response.json())
+                .then(events => {
+                    if (events.length > 0) {
+                        const eventsList = document.querySelector('#world-events-list ul');
+                        eventsList.innerHTML = '';
+                        
+                        events.slice(0, 5).forEach((event, index) => {
+                            const eventElement = createEventElement(event);
+                            eventsList.appendChild(eventElement);
+                            
+                            // Додаємо затримку для анімації появи
+                            eventElement.style.animationDelay = `${index * 0.1}s`;
+                        });
+                        
+                        document.getElementById('world-events-list').style.display = 'block';
+                    }
+                })
+                .catch(error => console.error('Помилка завантаження подій:', error));
+        }
+
+        function createEventElement(event) {
+            const li = document.createElement('li');
+            const timestamp = new Date(event.timestamp).toLocaleString();
+            const impactClass = getEventImpact(event.impact);
+            
+            li.innerHTML = `
+                <strong>${event.name}</strong>
+                <span class="event-impact ${impactClass}">${event.impact}</span>
+                <br>
+                <span class="event-description">${event.description || 'Без опису'}</span>
+                <small style="display: block; text-align: right; margin-top: 5px;">${timestamp}</small>
+            `;
+            
+            return li;
+        }
+
+        function getEventImpact(mood) {
+            switch(mood) {
+                case 'positive': return 'positive';
+                case 'negative': return 'negative';
+                default: return 'neutral';
+            }
+        }
+
+        function updateWorldMoodDisplay(data) {
+            const moodValue = document.getElementById('current-mood-value');
+            const intensityValue = document.getElementById('current-intensity-value');
+            const intensityBar = document.getElementById('intensity-bar');
+            const trendValue = document.getElementById('current-trend-value');
+            const effectsList = document.querySelector('#effects-list ul');
+            
+            // Оновлюємо значення настрою
+            moodValue.textContent = getMoodName(data.mood);
+            moodValue.className = 'mood-value ' + data.mood;
+            
+            // Оновлюємо значення інтенсивності
+            intensityValue.textContent = data.intensity;
+            intensityBar.style.width = data.intensity + '%';
+            
+            // Визначаємо тренд (для простоти припустимо стабільний)
+            trendValue.textContent = 'Стабільний';
+            trendValue.className = 'trend-value stable';
+            
+            // Оновлюємо список ефектів
+            effectsList.innerHTML = '';
+            if (data.effects && Object.keys(data.effects).length > 0) {
+                let index = 0;
+                for (const [effect, value] of Object.entries(data.effects)) {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>${effect}</span> <span>${value}</span>`;
+                    
+                    // Додаємо затримку для анімації появи
+                    li.style.animationDelay = `${index * 0.1}s`;
+                    effectsList.appendChild(li);
+                    index++;
+                }
+            } else {
+                const li = document.createElement('li');
+                li.textContent = 'Відсутні активні ефекти';
+                effectsList.appendChild(li);
+            }
+        }
+
+        function getMoodName(mood) {
+            const moodNames = {
+                'positive': 'Позитивний',
+                'negative': 'Негативний',
+                'anxious': 'Тривожний',
+                'melancholic': 'Меланхолійний',
+                'chaotic': 'Хаотичний',
+                'balanced': 'Збалансований'
+            };
+            return moodNames[mood] || 'Невідомий';
+        }
+
+        // Налаштовуємо кнопки зміни настрою
+        function setupMoodButtons() {
+            const moodButtons = document.querySelectorAll('.mood-buttons button');
+            
+            moodButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const mood = this.dataset.mood;
+                    const intensity = 80; // Фіксована висока інтенсивність для демонстрації
+                    
+                    // Оновлюємо настрій через API
+                    fetch('/api/world-mood', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            mood: mood,
+                            intensity: intensity,
+                            updated: Date.now(),
+                            effects: {} // Порожні ефекти для демонстрації
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Настрій успішно оновлено:', data);
+                        
+                        // Оновлюємо відображення
+                        fetchWorldMoodData();
+                    })
+                    .catch(error => console.error('Помилка оновлення настрою:', error));
+                });
+            });
+        }
+
+        // Налаштовуємо кнопку симуляції
+        function setupSimulationButton() {
+            const simulationButton = document.getElementById('run-simulation-btn');
+            const resultDiv = document.getElementById('simulation-result');
+            
+            simulationButton.addEventListener('click', function() {
+                // Показуємо завантаження
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = 'Запуск симуляції...';
+                resultDiv.className = '';
+                
+                // Запускаємо симуляцію через API
+                fetch('/api/run-autonomous-step')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            resultDiv.innerHTML = `
+                                <strong>Симуляція успішна!</strong><br>
+                                Подія: ${data.event.name}<br>
+                                Опис: ${data.event.description || 'Без опису'}<br>
+                                Вплив: ${data.event.impact === 'positive' ? 'Позитивний' : 'Негативний'}
+                            `;
+                            resultDiv.className = 'success';
+                            
+                            // Оновлюємо відображення
+                            fetchWorldMoodData();
+                        } else {
+                            resultDiv.innerHTML = `<strong>Помилка:</strong> ${data.message}`;
+                            resultDiv.className = 'error';
+                        }
+                    })
+                    .catch(error => {
+                        resultDiv.innerHTML = `<strong>Помилка:</strong> ${error.message}`;
+                        resultDiv.className = 'error';
+                    });
+            });
+        }
+
+        // Ініціалізація при завантаженні сторінки
+        window.onload = function() {
+            initScene();
+            fetchWorldMoodData();
+            setupMoodButtons();
+            setupSimulationButton();
+            
+            // Періодичне оновлення даних
+            setInterval(fetchWorldMoodData, 30000); // Кожні 30 секунд
+        };
+    </script>
+</body>
+</html>
